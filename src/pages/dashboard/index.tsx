@@ -1,15 +1,58 @@
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 import { ROUTE_URL } from "@/constants/routes"
-import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User } from "lucide-react"
+import { BotMessageSquare, ChartNoAxesColumn, Notebook, Smile } from "lucide-react"
+import { getDashboardStats, getRecentActivities } from "@/services/dashboardServices"
+import { showError } from "@/utils/toast"
 
 export default function DashboardPage() {
-  const stats = [
+  const [stats, setStats] = useState([
     { label: "Cảm xúc hôm nay", value: "😊", icon: <Smile /> },
-    { label: "Nhật ký ghi chép", value: "5", icon: <Notebook />, unit: "lần" },
-    { label: "Tuần này", value: "18", icon: <ChartNoAxesColumn />, unit: "ngày tốt" },
-    { label: "Phiên chatbot", value: "3", icon: <BotMessageSquare />, unit: "lần" },
-  ]
+    { label: "Nhật ký ghi chép", value: "0", icon: <Notebook />, unit: "lần" },
+    { label: "Tuần này", value: "0", icon: <ChartNoAxesColumn />, unit: "ngày tốt" },
+    { label: "Phiên chatbot", value: "0", icon: <BotMessageSquare />, unit: "lần" },
+  ])
+  const [activities, setActivities] = useState<Array<{ time: string; action: string }>>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        const [statsResponse, activitiesResponse] = await Promise.all([
+          getDashboardStats(),
+          getRecentActivities(10),
+        ])
+
+        if (statsResponse.success) {
+          const statsData = statsResponse.data.stats
+          setStats([
+            { label: "Cảm xúc hôm nay", value: statsData.todayEmotion, icon: <Smile /> },
+            { label: "Nhật ký ghi chép", value: statsData.journalEntries.toString(), icon: <Notebook />, unit: "lần" },
+            { label: "Tuần này", value: statsData.goodDaysThisWeek.toString(), icon: <ChartNoAxesColumn />, unit: "ngày tốt" },
+            { label: "Phiên chatbot", value: statsData.chatSessions.toString(), icon: <BotMessageSquare />, unit: "lần" },
+          ])
+        }
+
+        if (activitiesResponse.success) {
+          setActivities(
+            activitiesResponse.data.activities.map((activity) => ({
+              action: activity.action,
+              time: activity.time,
+            }))
+          )
+        }
+      } catch (error: any) {
+        console.error("Failed to load dashboard data:", error)
+        showError("Lỗi", "Không thể tải dữ liệu trang chủ. Vui lòng thử lại.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDashboardData()
+  }, [])
 
   const quickActions = [
     {
@@ -78,21 +121,23 @@ export default function DashboardPage() {
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-4">Hoạt động gần đây</h3>
         <Card className="p-6 border-0 shadow-sm">
-          <div className="space-y-4">
-            {[
-              { time: "Hôm nay lúc 10:30", action: "Bạn chia sẻ cảm xúc: Cảm thấy vui và tự tin" },
-              { time: "Hôm qua lúc 14:15", action: "Bạn hoàn thành bài tập thở sâu" },
-              { time: "2 ngày trước", action: "Bạn ghi lại nhật ký cảm xúc" },
-            ].map((activity, i) => (
-              <div key={i} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                <div className="text-primary font-bold text-lg">●</div>
-                <div>
-                  <p className="text-foreground font-medium">{activity.action}</p>
-                  <p className="text-sm text-muted-foreground">{activity.time}</p>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Đang tải...</div>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">Chưa có hoạt động nào</div>
+          ) : (
+            <div className="space-y-4">
+              {activities.map((activity, i) => (
+                <div key={i} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                  <div className="text-primary font-bold text-lg">●</div>
+                  <div>
+                    <p className="text-foreground font-medium">{activity.action}</p>
+                    <p className="text-sm text-muted-foreground">{activity.time}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>

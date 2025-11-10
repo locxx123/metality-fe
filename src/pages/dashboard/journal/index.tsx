@@ -1,81 +1,79 @@
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { emotions } from "@/config"
+import { getEmotions } from "@/services/emotionServices"
+import { useToast } from "@/components/ui/use-toast"
 
 interface JournalEntry {
   id: string
   date: Date
   emotion: string
+  emotionValue: string
   emoji: string
   intensity: number
   tags: string[]
   description: string
-  note?: string
 }
 
-const sampleEntries: JournalEntry[] = [
-  {
-    id: "1",
-    date: new Date(2025, 10, 8),
-    emotion: "Vui vẻ",
-    emoji: "😊",
-    intensity: 4,
-    tags: ["Công việc", "Gia đình"],
-    description: "Ngày hôm nay rất tuyệt vời. Tôi hoàn thành dự án và cả gia đình đi ăn cơm với nhau.",
-    note: "Cảm thấy có ý nghĩa",
-  },
-  {
-    id: "2",
-    date: new Date(2025, 10, 7),
-    emotion: "Lo lắng",
-    emoji: "😰",
-    intensity: 3,
-    tags: ["Công việc"],
-    description: "Có một bài trình bày quan trọng sắp tới.",
-    note: "Nhưng tôi đã chuẩn bị tốt",
-  },
-  {
-    id: "3",
-    date: new Date(2025, 10, 6),
-    emotion: "Bình tĩnh",
-    emoji: "😌",
-    intensity: 2,
-    tags: ["Sức khỏe"],
-    description: "Một ngày yên tĩnh. Tôi đã thiền 20 phút và cảm thấy thả lỏng.",
-    note: "Thiền rất giúp ích",
-  },
-  {
-    id: "4",
-    date: new Date(2025, 10, 5),
-    emotion: "Mệt mỏi",
-    emoji: "😴",
-    intensity: 4,
-    tags: ["Công việc"],
-    description: "Tuần này khá mệt mỏi vì quá nhiều công việc.",
-    note: "Cần nghỉ ngơi nhiều hơn",
-  },
-  {
-    id: "5",
-    date: new Date(2025, 10, 4),
-    emotion: "Buồn",
-    emoji: "😔",
-    intensity: 3,
-    tags: ["Quan hệ", "Gia đình"],
-    description: "Có một cuộc tranh cãi nhỏ với bạn bè.",
-    note: "Nhưng chúng tôi đã nói chuyện sau đó",
-  },
-]
-
-type ViewMode = "timeline" | "calendar" | "list"
+type ViewMode = "timeline" | "list"
 
 export default function JournalPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("timeline")
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
   const [filterTag, setFilterTag] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [entries, setEntries] = useState<JournalEntry[]>([])
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
-  const filteredEntries = sampleEntries.filter((entry) => {
+  const fetchEntries = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await getEmotions()
+      const apiEntries = response?.data?.emotions ?? []
+
+      const mappedEntries: JournalEntry[] = apiEntries.map((item: any) => {
+        const meta = emotions.find((emotion) => emotion.value === item.emotionType) || null
+
+        return {
+          id: item.id || item._id,
+          date: new Date(item.date || item.createdAt),
+          emotion: meta?.label ?? item.emotionType ?? "Không xác định",
+          emotionValue: item.emotionType ?? "",
+          emoji: meta?.emoji ?? item.emoji ?? "📝",
+          intensity: item.intensity ?? item.moodRating ?? 0,
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          description: item.description ?? item.journalEntry ?? "",
+        }
+      })
+
+      setEntries(mappedEntries)
+    } catch (error) {
+      const message =
+        (typeof error === "object" &&
+          error !== null &&
+          "response" in error &&
+          typeof (error as any).response?.data?.msg === "string" &&
+          (error as any).response.data.msg) ||
+        "Không thể tải nhật ký cảm xúc. Vui lòng thử lại."
+
+      toast({
+        variant: "destructive",
+        title: "Lỗi tải dữ liệu",
+        description: message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    fetchEntries()
+  }, [fetchEntries])
+
+  const filteredEntries = entries.filter((entry) => {
     if (filterTag && !entry.tags.includes(filterTag)) return false
     if (searchQuery && !entry.description.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false
@@ -83,21 +81,19 @@ export default function JournalPage() {
     return true
   })
 
-  const allTags = Array.from(new Set(sampleEntries.flatMap((e) => e.tags)))
+  const allTags = useMemo(() => Array.from(new Set(entries.flatMap((entry) => entry.tags))), [entries])
 
-  const emotionColors: Record<string, string> = {
-    "Vui vẻ": "bg-yellow-100 dark:bg-yellow-900",
-    Buồn: "bg-blue-100 dark:bg-blue-900",
-    "Lo lắng": "bg-orange-100 dark:bg-orange-900",
-    "Tức giận": "bg-red-100 dark:bg-red-900",
-    "Mệt mỏi": "bg-purple-100 dark:bg-purple-900",
-    "Bình tĩnh": "bg-green-100 dark:bg-green-900",
-    "Yêu thích": "bg-pink-100 dark:bg-pink-900",
-    "Bối rối": "bg-indigo-100 dark:bg-indigo-900",
-  }
+  const emotionColors = useMemo(() => {
+    const colorMap: Record<string, string> = {}
+    emotions.forEach((emotion) => {
+      colorMap[emotion.label] = emotion.color
+    })
+    return colorMap
+  }, [])
 
   const getEmojis = (intensity: number) => {
-    return "●".repeat(intensity) + "○".repeat(5 - intensity)
+    const safeIntensity = Math.min(Math.max(intensity, 0), 5)
+    return "●".repeat(safeIntensity) + "○".repeat(5 - safeIntensity)
   }
 
   return (
@@ -126,7 +122,7 @@ export default function JournalPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFilterTag(null)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                className={`px-3 py-1 cursor-pointer rounded-full text-sm font-medium transition-colors ${
                   filterTag === null
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -138,7 +134,7 @@ export default function JournalPage() {
                 <button
                   key={tag}
                   onClick={() => setFilterTag(tag)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 cursor-pointer py-1 rounded-full text-sm font-medium transition-colors ${
                     filterTag === tag
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -158,7 +154,7 @@ export default function JournalPage() {
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
               viewMode === mode
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -170,7 +166,7 @@ export default function JournalPage() {
       </div>
 
       {/* Timeline View */}
-      {viewMode === "timeline" && (
+      {viewMode === "timeline" && !loading && (
         <div className="space-y-0">
           {filteredEntries.map((entry, index) => (
             <div key={entry.id} className="relative">
@@ -212,13 +208,6 @@ export default function JournalPage() {
 
                   {selectedEntry?.id === entry.id && (
                     <div className="space-y-3 pt-3 border-t border-border">
-                      {entry.note && (
-                        <div className="bg-accent/10 p-3 rounded-lg">
-                          <p className="text-xs text-muted-foreground mb-1">Ghi chú:</p>
-                          <p className="text-sm text-foreground">{entry.note}</p>
-                        </div>
-                      )}
-
                       {entry.tags.length > 0 && (
                         <div>
                           <p className="text-xs text-muted-foreground mb-2">Liên quan đến:</p>
@@ -253,7 +242,7 @@ export default function JournalPage() {
       )}
 
       {/* List View */}
-      {viewMode === "list" && (
+      {viewMode === "list" && !loading && (
         <div className="space-y-3">
           {filteredEntries.map((entry) => (
             <Card
@@ -286,11 +275,6 @@ export default function JournalPage() {
 
               {selectedEntry?.id === entry.id && (
                 <div className="mt-3 pt-3 border-t border-border space-y-2">
-                  {entry.note && (
-                    <div className="bg-accent/10 p-2 rounded text-sm text-foreground">
-                      <strong>Ghi chú:</strong> {entry.note}
-                    </div>
-                  )}
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="flex-1 bg-transparent">
                       Chỉnh sửa
@@ -306,7 +290,13 @@ export default function JournalPage() {
         </div>
       )}
 
-      {filteredEntries.length === 0 && (
+      {loading && (
+        <Card className="p-8 text-center border-0 shadow-sm">
+          <p className="text-lg text-muted-foreground">Đang tải nhật ký cảm xúc...</p>
+        </Card>
+      )}
+
+      {!loading && filteredEntries.length === 0 && (
         <Card className="p-8 text-center border-0 shadow-sm">
           <p className="text-lg text-muted-foreground">Không tìm thấy bản ghi nào</p>
         </Card>
@@ -316,23 +306,25 @@ export default function JournalPage() {
       <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5">
         <h3 className="font-semibold text-foreground mb-4">Tóm tắt</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
+          <div className="flex flex-col items-center">
             <p className="text-2xl font-bold text-primary">{filteredEntries.length}</p>
             <p className="text-xs text-muted-foreground">Bản ghi tổng cộng</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center">
             <p className="text-2xl font-bold text-accent">
-              {Math.round(filteredEntries.reduce((sum, e) => sum + e.intensity, 0) / filteredEntries.length)}
+              {filteredEntries.length > 0
+                ? Math.round(filteredEntries.reduce((sum, e) => sum + e.intensity, 0) / filteredEntries.length)
+                : 0}
             </p>
             <p className="text-xs text-muted-foreground">Cường độ trung bình</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center">
             <p className="text-2xl font-bold text-green-600">
               {filteredEntries.filter((e) => e.intensity <= 2).length}
             </p>
             <p className="text-xs text-muted-foreground">Ngày tốt</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center">
             <p className="text-2xl font-bold text-orange-600">
               {filteredEntries.filter((e) => e.intensity >= 4).length}
             </p>
@@ -343,4 +335,3 @@ export default function JournalPage() {
     </div>
   )
 }
-

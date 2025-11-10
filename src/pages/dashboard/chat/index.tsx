@@ -1,8 +1,13 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { sendMessage, getConversation, getSessions, createSession, type ChatSession } from "@/services/chatServices"
+import { showError, showSuccess } from "@/utils/toast"
+import { Plus, MessageSquare } from "lucide-react"
+import { ROUTE_URL } from "@/constants/routes"
 
 interface Message {
   id: string
@@ -12,105 +17,173 @@ interface Message {
   emotion?: string
 }
 
-const sampleResponses = [
-  {
-    keywords: ["buồn", "sad"],
-    responses: [
-      "Tôi hiểu bạn đang cảm thấy buồn. Đó là một cảm xúc bình thường và hợp lệ. Hãy thử ghi lại những điều bạn đang cảm thấy. Đôi khi viết ra giúp chúng ta hiểu rõ hơn về cảm xúc của mình.",
-      "Buồn là một phần của cuộc sống. Hãy tự cho phép mình cảm thấy điều này. Bạn có muốn nói về điều gì làm bạn buồn không? Hoặc bạn muốn thử một số hoạt động thư giãn?",
-    ],
-  },
-  {
-    keywords: ["lo lắng", "anxiety", "sợ"],
-    responses: [
-      "Lo lắng có thể rất khó chịu. Hãy thử bài tập hít thở 4-7-8: hít vào trong 4 giây, giữ 7 giây, thở ra trong 8 giây. Lặp lại 4-5 lần. Điều này có thể giúp giảm bớt cảm giác lo lắng.",
-      "Khi bạn cảm thấy lo lắng, hãy tập trung vào hiện tại. Tìm 5 thứ bạn có thể thấy, 4 thứ bạn có thể chạm, 3 thứ bạn có thể nghe, 2 thứ bạn có thể ngửi, 1 thứ bạn có thể nếm. Đây gọi là phương pháp 5-4-3-2-1.",
-    ],
-  },
-  {
-    keywords: ["tức giận", "angry", "tức"],
-    responses: [
-      "Tức giận là một cảm xúc mạnh mẽ. Hãy tránh xa tình huống đó một chút, đi bộ hoặc tìm một chỗ yên tĩnh. Sau đó, hãy cố gắng hiểu lý do tại sao bạn lại tức giận.",
-      "Khi bạn cảm thấy tức giận, hãy thử viết ra những điều bạn muốn nói mà không cần nói chúng với ai. Sau đó xé tờ giấy đó. Điều này giúp bạn giải tỏa cảm xúc mà không làm hại ai.",
-    ],
-  },
-  {
-    keywords: ["mệt mỏi", "tired", "mệt"],
-    responses: [
-      "Nếu bạn cảm thấy mệt mỏi, điều quan trọng nhất là nghỉ ngơi. Hãy chủ động tìm thời gian để thư giãn. Ngủ đủ giấc cũng rất quan trọng cho sức khỏe tâm lý.",
-      "Mệt mỏi có thể là dấu hiệu của sự kiệt sức. Hãy lập danh sách những thứ gây áp lực cho bạn và cố gắng giảm bớt chúng. Hãy yêu thương chính mình hơn.",
-    ],
-  },
-  {
-    keywords: ["vui", "happy", "hạnh phúc"],
-    responses: [
-      "Tuyệt vời! Tôi rất vui khi bạn đang cảm thấy vui vẻ. Hãy cố gắng ghi nhớ cảm giác này và những gì gây ra nó. Đó có thể là một nguồn sức mạnh khi bạn cảm thấy khó khăn.",
-      "Điều tuyệt vời là bạn đang có một ngày tốt. Hãy chia sẻ sự vui vẻ của bạn với những người xung quanh. Đôi khi, giúp người khác cũng giúp chúng ta cảm thấy tốt hơn.",
-    ],
-  },
-]
-
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "assistant",
-      content:
-        "Xin chào! Tôi là trợ lý tâm lý của bạn. Hôm nay bạn có cảm thấy như thế nào? Tôi ở đây để lắng nghe và hỗ trợ bạn.",
-      timestamp: new Date(),
-    },
-  ])
+  const { sessionId: sessionIdFromUrl } = useParams<{ sessionId?: string }>()
+  const navigate = useNavigate()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [sessions, setSessions] = useState<ChatSession[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  const loadMessages = async (sessionId: string) => {
+    try {
+      setIsLoadingHistory(true)
+      const response = await getConversation(sessionId)
+      if (response.success) {
+        // Convert API messages to UI messages
+        const convertedMessages: Message[] = response.data.messages.map((msg) => ({
+          id: msg.id,
+          type: msg.isFromUser ? "user" : "assistant",
+          content: msg.message,
+          timestamp: new Date(msg.createdAt),
+          emotion: msg.sentiment,
+        }))
+        setMessages(convertedMessages)
+      }
+    } catch (error: any) {
+      console.error("Failed to load messages:", error)
+      showError("Lỗi", "Không thể tải tin nhắn")
+      setMessages([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
+  const handleNewChat = async () => {
+    try {
+      const response = await createSession()
+      if (response.success) {
+        const newSession = response.data
+        setSessions((prev) => [newSession, ...prev])
+        setMessages([])
+        // Navigate đến URL mới với sessionId
+        navigate(`${ROUTE_URL.CHAT}/${newSession.id}`, { replace: true })
+        showSuccess("Thành công", "Đã tạo cuộc trò chuyện mới")
+      }
+    } catch (error: any) {
+      console.error("Failed to create session:", error)
+      showError("Lỗi", "Không thể tạo cuộc trò chuyện mới")
+    }
+  }
+
+  const handleSelectSession = (sessionId: string) => {
+    // Navigate đến URL với sessionId
+    navigate(`${ROUTE_URL.CHAT}/${sessionId}`, { replace: true })
+  }
+
+  // Load sessions khi component mount
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        setIsLoadingSessions(true)
+        const response = await getSessions()
+        if (response.success && response.data.sessions.length > 0) {
+          setSessions(response.data.sessions)
+          
+          // Nếu có sessionId trong URL, kiểm tra xem session đó có tồn tại không
+          if (sessionIdFromUrl) {
+            const sessionExists = response.data.sessions.some(s => s.id === sessionIdFromUrl)
+            if (!sessionExists) {
+              // Session không tồn tại, redirect đến session đầu tiên
+              navigate(`${ROUTE_URL.CHAT}/${response.data.sessions[0].id}`, { replace: true })
+            }
+          } else {
+            // Không có sessionId trong URL, redirect đến session đầu tiên
+            navigate(`${ROUTE_URL.CHAT}/${response.data.sessions[0].id}`, { replace: true })
+          }
+        } else {
+          // Nếu chưa có session, tạo session mới
+          await handleNewChat()
+        }
+      } catch (error: any) {
+        console.error("Failed to load sessions:", error)
+        showError("Lỗi", "Không thể tải danh sách cuộc trò chuyện")
+      } finally {
+        setIsLoadingSessions(false)
+      }
+    }
+
+    loadSessions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Load messages khi sessionId từ URL thay đổi
+  useEffect(() => {
+    if (sessionIdFromUrl) {
+      loadMessages(sessionIdFromUrl)
+    }
+  }, [sessionIdFromUrl])
+
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
-  const getAIResponse = (userMessage: string): string => {
-    const messageLower = userMessage.toLowerCase()
-
-    for (const response of sampleResponses) {
-      if (response.keywords.some((keyword) => messageLower.includes(keyword))) {
-        return response.responses[Math.floor(Math.random() * response.responses.length)]
-      }
-    }
-
-    return "Tôi hiểu bạn đang nói điều đó. Bạn có muốn kể cho tôi nghe thêm chi tiết không? Hoặc bạn muốn thử một số kỹ năng thư giãn?"
-  }
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isLoading || !sessionIdFromUrl) return
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: input,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
+    const userInput = input.trim()
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "assistant",
-        content: getAIResponse(input),
-        timestamp: new Date(),
+    // Add user message optimistically
+    const tempUserMessage: Message = {
+      id: `temp-${Date.now()}`,
+      type: "user",
+      content: userInput,
+      timestamp: new Date(),
+    }
+    setMessages((prev) => [...prev, tempUserMessage])
+
+    try {
+      const response = await sendMessage(userInput, sessionIdFromUrl)
+
+      if (response.success && response.data) {
+        // Replace temp message with real user message
+        const userMessage: Message = {
+          id: response.data.userMessage.id,
+          type: "user",
+          content: response.data.userMessage.message,
+          timestamp: new Date(response.data.userMessage.createdAt),
+          emotion: response.data.userMessage.sentiment,
+        }
+
+        // Add AI message
+        const aiMessage: Message = {
+          id: response.data.aiMessage.id,
+          type: "assistant",
+          content: response.data.aiMessage.message,
+          timestamp: new Date(response.data.aiMessage.createdAt),
+        }
+
+        // Replace temp message and add AI message
+        setMessages((prev) => {
+          const filtered = prev.filter((msg) => msg.id !== tempUserMessage.id)
+          return [...filtered, userMessage, aiMessage]
+        })
+
+        // Reload sessions để cập nhật title và lastMessageAt
+        const sessionsResponse = await getSessions()
+        if (sessionsResponse.success) {
+          setSessions(sessionsResponse.data.sessions)
+        }
       }
-      setMessages((prev) => [...prev, aiMessage])
+    } catch (error: any) {
+      console.error("Failed to send message:", error)
+      showError("Lỗi gửi tin nhắn", error.response?.data?.msg || "Không thể gửi tin nhắn. Vui lòng thử lại.")
+      
+      // Remove temp message on error
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempUserMessage.id))
+    } finally {
       setIsLoading(false)
-    }, 800)
+    }
   }
 
   const suggestedPrompts = [
@@ -121,17 +194,74 @@ export default function ChatPage() {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] flex flex-col">
-      {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Trợ lý tư vấn AI</h1>
-        <p className="text-muted-foreground">Trò chuyện với trợ lý ảo thông minh để nhận lời khuyên và hỗ trợ tâm lý</p>
+    <div className="flex h-[calc(100vh-100px)] gap-4 pb-4">
+      {/* Sidebar - Sessions List */}
+      <div className="w-64 flex-shrink-0">
+        <Card className="h-full flex flex-col border-0 shadow-sm">
+          {/* Header với nút New Chat */}
+          <div className="p-4 border-b border-border">
+            <Button
+              onClick={handleNewChat}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Cuộc trò chuyện mới
+            </Button>
+          </div>
+
+          {/* Sessions List */}
+          <div className="flex-1 overflow-y-auto p-2">
+            {isLoadingSessions ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">Đang tải...</div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Chưa có cuộc trò chuyện nào
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {sessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => handleSelectSession(session.id)}
+                    className={`w-full cursor-pointer text-left px-3 py-2 rounded-lg transition-colors ${
+                      sessionIdFromUrl === session.id
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{session.title}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Trợ lý tư vấn AI</h1>
+          <p className="text-muted-foreground">Trò chuyện với trợ lý ảo thông minh để nhận lời khuyên và hỗ trợ tâm lý</p>
+        </div>
 
       {/* Chat Area */}
       <Card className="flex-1 overflow-hidden flex flex-col border-0 shadow-sm mb-4">
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background to-muted/20">
-          {messages.length === 1 && (
+          {isLoadingHistory ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">💬</div>
+                <p className="text-muted-foreground">Đang tải lịch sử trò chuyện...</p>
+              </div>
+            </div>
+          ) : messages.length === 0 || (messages.length === 1 && messages[0].type === "assistant") ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-4">💬</div>
@@ -154,9 +284,9 @@ export default function ChatPage() {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
-          {messages.map((message) => (
+          {!isLoadingHistory && messages.map((message) => (
             <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
@@ -222,6 +352,7 @@ export default function ChatPage() {
           liên hệ với chuyên gia.
         </p>
       </Card>
+      </div>
     </div>
   )
 }

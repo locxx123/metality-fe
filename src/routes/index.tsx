@@ -52,6 +52,10 @@ const routes = [
                 element: <ChatPage />,
             },
             {
+                path: `${ROUTE_URL.CHAT}/:sessionId`,
+                element: <ChatPage />,
+            },
+            {
                 path: ROUTE_URL.JOURNAL,
                 element: <JournalPage />,
             },
