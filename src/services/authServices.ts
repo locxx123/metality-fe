@@ -33,3 +33,22 @@ export const getProfile = async () => {
     return response.data;
 }
 
+export const logout = async () => {
+    try {
+        // Gọi API logout nếu có (tùy chọn)
+        // const response = await axios.post("/auth/logout");
+        // return response.data;
+        
+        // Xóa cookies bằng cách set expires trong quá khứ
+        document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        return { success: true };
+    } catch (error) {
+        // Nếu API logout fail, vẫn xóa cookies
+        document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        return { success: true };
+    }
+}
+

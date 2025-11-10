@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Logo from "@/components/share/logo"
 import { ROUTE_URL } from "@/constants/routes"
+import { login } from "@/services/authServices"
+import { showSuccess, showError } from "@/utils/toast"
+import useUserStore from "@/store/userStore"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -13,14 +16,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  const { setUser } = useUserStore();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    setTimeout(() => {
+    try {
+      const response = await login(email, password)
+      
+      if (response.success && response.statusCode === 200) {
+        showSuccess("Đăng nhập thành công!", "Chào mừng bạn trở lại")
+        setUser(response.data.user);
+        setTimeout(() => {
+          navigate(ROUTE_URL.DASHBOARD)
+        }, 500)
+      } else {
+        showError("Lỗi đăng nhập", response.msg || "Đăng nhập thất bại. Vui lòng thử lại.")
+      }
+    } catch (err: any) {
+      showError("Lỗi đăng nhập", err.response?.data?.msg || "Email hoặc mật khẩu không chính xác")
+    } finally {
       setIsLoading(false)
-      navigate(ROUTE_URL.DASHBOARD)
-    }, 1000)
+    }
   }
 
   return (

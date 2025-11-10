@@ -1,5 +1,5 @@
 import logo from "@/resources/images/logo.png";
-export default function Logo() {
+export default function Logo({ marginBottom = "-100px", marginTop = "-60px", marginRight = "0px" }: { marginBottom?: string, marginTop?: string, marginRight?: string }) {
   return (
     <div className="flex items-center justify-center mb-4">
       <img
@@ -10,8 +10,9 @@ export default function Logo() {
         style={{
           width: "300px",
           height: "300px",
-          marginBottom: "-100px",
-          marginTop: "-60px",
+          marginBottom,
+          marginTop,
+          marginRight,
           objectFit: "contain",
         }}
       />

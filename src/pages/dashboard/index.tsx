@@ -1,13 +1,14 @@
 import { Card } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 import { ROUTE_URL } from "@/constants/routes"
+import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User } from "lucide-react"
 
 export default function DashboardPage() {
   const stats = [
-    { label: "Cảm xúc hôm nay", value: "😊", icon: "💭" },
-    { label: "Nhật ký ghi chép", value: "5", icon: "📔", unit: "lần" },
-    { label: "Tuần này", value: "18", icon: "📊", unit: "ngày tốt" },
-    { label: "Phiên chatbot", value: "3", icon: "💬", unit: "lần" },
+    { label: "Cảm xúc hôm nay", value: "😊", icon: <Smile /> },
+    { label: "Nhật ký ghi chép", value: "5", icon: <Notebook />, unit: "lần" },
+    { label: "Tuần này", value: "18", icon: <ChartNoAxesColumn />, unit: "ngày tốt" },
+    { label: "Phiên chatbot", value: "3", icon: <BotMessageSquare />, unit: "lần" },
   ]
 
   const quickActions = [
@@ -15,15 +16,15 @@ export default function DashboardPage() {
       title: "Chia sẻ cảm xúc",
       description: "Ghi lại trạng thái tinh thần hiện tại",
       href: ROUTE_URL.SHARE_EMOTION,
-      icon: "💭",
+      icon: <Smile />,
     },
-    { title: "Chat với AI", description: "Nhận lời khuyên từ trợ lý ảo", href: ROUTE_URL.CHAT, icon: "💬" },
-    { title: "Xem nhật ký", description: "Kiểm tra lịch sử cảm xúc của bạn", href: ROUTE_URL.JOURNAL, icon: "📔" },
+    { title: "Chat với AI", description: "Nhận lời khuyên từ trợ lý ảo", href: ROUTE_URL.CHAT, icon: <BotMessageSquare /> },
+    { title: "Xem nhật ký", description: "Kiểm tra lịch sử cảm xúc của bạn", href: ROUTE_URL.JOURNAL, icon: <Notebook /> },
     {
       title: "Phân tích xu hướng",
       description: "Xem biểu đồ phân tích cảm xúc",
       href: ROUTE_URL.ANALYTICS,
-      icon: "📊",
+      icon: <ChartNoAxesColumn />,
     },
   ]
 
