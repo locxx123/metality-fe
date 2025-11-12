@@ -10,6 +10,19 @@ const instance = axios.create({
     withCredentials: true,
 });
 
+// Request interceptor để đảm bảo withCredentials luôn được set
+instance.interceptors.request.use(
+    (config) => {
+        // Đảm bảo withCredentials luôn true cho mọi request
+        config.withCredentials = true;
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor để xử lý lỗi và retry
 instance.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -22,6 +35,8 @@ instance.interceptors.response.use(
 
         if (shouldRetry) {
             originalRequest._retry = true;
+            // Đảm bảo withCredentials vẫn true khi retry
+            originalRequest.withCredentials = true;
             return instance(originalRequest); // retry 1 lần sau khi backend đã refresh token
         }
 
