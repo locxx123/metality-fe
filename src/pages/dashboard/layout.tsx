@@ -1,4 +1,3 @@
-import type React from "react"
 import { useState, useEffect } from "react"
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
