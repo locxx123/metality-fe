@@ -19,6 +19,28 @@ interface JournalEntry {
 
 type ViewMode = "timeline" | "list"
 
+const SkeletonBlock = ({ className }: { className?: string }) => (
+  <div className={`bg-muted rounded-md animate-pulse ${className ?? ""}`} />
+)
+
+const JournalSkeleton = ({ viewMode }: { viewMode: ViewMode }) => (
+  <div className={viewMode === "timeline" ? "space-y-4" : "space-y-3"}>
+    {[...Array(viewMode === "timeline" ? 3 : 5)].map((_, idx) => (
+      <Card key={idx} className="p-4 border-0 shadow-sm">
+        <div className="flex items-start gap-4">
+          <SkeletonBlock className="w-12 h-12 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <SkeletonBlock className="h-4 w-32" />
+            <SkeletonBlock className="h-3 w-24" />
+            <SkeletonBlock className="h-3 w-full" />
+            <SkeletonBlock className="h-3 w-3/4" />
+          </div>
+        </div>
+      </Card>
+    ))}
+  </div>
+)
+
 export default function JournalPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("timeline")
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
@@ -98,11 +120,6 @@ export default function JournalPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Nhật ký cảm xúc</h1>
-        <p className="text-muted-foreground">Xem lại lịch sử cảm xúc của bạn và phát hiện các mô hình</p>
-      </div>
 
       {/* Search and Filter */}
       <Card className="p-4 border-0 shadow-sm">
@@ -165,66 +182,105 @@ export default function JournalPage() {
         ))}
       </div>
 
-      {/* Timeline View */}
-      {viewMode === "timeline" && !loading && (
-        <div className="space-y-0">
-          {filteredEntries.map((entry, index) => (
-            <div key={entry.id} className="relative">
-              {/* Timeline Line */}
-              {index < filteredEntries.length - 1 && <div className="absolute left-6 top-20 w-1 h-8 bg-border" />}
-
-              {/* Entry */}
-              <div className="flex gap-4 mb-6">
-                {/* Timeline Dot */}
-                <div className="flex flex-col items-center pt-2 flex-shrink-0">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-4 border-background ${emotionColors[entry.emotion] || "bg-gray-100"}`}
-                  >
-                    {entry.emoji}
-                  </div>
-                </div>
-
-                {/* Entry Card */}
-                <Card
-                  onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
-                  className="flex-1 p-4 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{entry.emotion}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {entry.date.toLocaleDateString("vi-VN", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
+      {/* Entries */}
+      {loading ? (
+        <JournalSkeleton viewMode={viewMode} />
+      ) : (
+        <>
+          {viewMode === "timeline" && (
+            <div className="space-y-0">
+              {filteredEntries.map((entry, index) => (
+                <div key={entry.id} className="relative">
+                  {index < filteredEntries.length - 1 && <div className="absolute left-6 top-20 w-1 h-8 bg-border" />}
+                  <div className="flex gap-4 mb-6">
+                    <div className="flex flex-col items-center pt-2 flex-shrink-0">
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-4 border-background ${emotionColors[entry.emotion] || "bg-gray-100"}`}
+                      >
+                        {entry.emoji}
+                      </div>
                     </div>
-                    <div className="text-xs font-medium text-primary">{getEmojis(entry.intensity)}</div>
-                  </div>
-
-                  <p className="text-sm text-foreground mb-3 line-clamp-2">{entry.description}</p>
-
-                  {selectedEntry?.id === entry.id && (
-                    <div className="space-y-3 pt-3 border-t border-border">
-                      {entry.tags.length > 0 && (
+                    <Card
+                      onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
+                      className="flex-1 p-4 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="text-xs text-muted-foreground mb-2">Liên quan đến:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {entry.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="bg-primary/20 text-primary px-2 py-1 rounded text-xs font-medium"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
+                          <h3 className="font-semibold text-foreground">{entry.emotion}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {entry.date.toLocaleDateString("vi-VN", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <div className="text-xs font-medium text-primary">{getEmojis(entry.intensity)}</div>
+                      </div>
+
+                      <p className="text-sm text-foreground mb-3 line-clamp-2">{entry.description}</p>
+
+                      {selectedEntry?.id === entry.id && (
+                        <div className="space-y-3 pt-3 border-t border-border">
+                          {entry.tags.length > 0 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-2">Liên quan đến:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {entry.tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="bg-primary/20 text-primary px-2 py-1 rounded text-xs font-medium"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
+                    </Card>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-                      <div className="flex gap-2 pt-2">
+          {viewMode === "list" && (
+            <div className="space-y-3">
+              {filteredEntries.map((entry) => (
+                <Card
+                  key={entry.id}
+                  onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
+                  className="p-4 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="text-3xl flex-shrink-0">{entry.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-1">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{entry.emotion}</h3>
+                          <p className="text-xs text-muted-foreground">{entry.date.toLocaleDateString("vi-VN")}</p>
+                        </div>
+                        <div className="text-xs font-medium text-primary whitespace-nowrap">
+                          {getEmojis(entry.intensity)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground line-clamp-2">{entry.description}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {entry.tags.map((tag) => (
+                          <span key={tag} className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedEntry?.id === entry.id && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1 bg-transparent">
                           Chỉnh sửa
                         </Button>
@@ -235,65 +291,10 @@ export default function JournalPage() {
                     </div>
                   )}
                 </Card>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* List View */}
-      {viewMode === "list" && !loading && (
-        <div className="space-y-3">
-          {filteredEntries.map((entry) => (
-            <Card
-              key={entry.id}
-              onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
-              className="p-4 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start gap-4">
-                <div className="text-3xl flex-shrink-0">{entry.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-1">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{entry.emotion}</h3>
-                      <p className="text-xs text-muted-foreground">{entry.date.toLocaleDateString("vi-VN")}</p>
-                    </div>
-                    <div className="text-xs font-medium text-primary whitespace-nowrap">
-                      {getEmojis(entry.intensity)}
-                    </div>
-                  </div>
-                  <p className="text-sm text-foreground line-clamp-2">{entry.description}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {entry.tags.map((tag) => (
-                      <span key={tag} className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {selectedEntry?.id === entry.id && (
-                <div className="mt-3 pt-3 border-t border-border space-y-2">
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                      Chỉnh sửa
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 text-destructive bg-transparent">
-                      Xóa
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {loading && (
-        <Card className="p-8 text-center border-0 shadow-sm">
-          <p className="text-lg text-muted-foreground">Đang tải nhật ký cảm xúc...</p>
-        </Card>
+          )}
+        </>
       )}
 
       {!loading && filteredEntries.length === 0 && (
@@ -305,32 +306,43 @@ export default function JournalPage() {
       {/* Stats Summary */}
       <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5">
         <h3 className="font-semibold text-foreground mb-4">Tóm tắt</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center">
-            <p className="text-2xl font-bold text-primary">{filteredEntries.length}</p>
-            <p className="text-xs text-muted-foreground">Bản ghi tổng cộng</p>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-2">
+                <SkeletonBlock className="h-8 w-12" />
+                <SkeletonBlock className="h-3 w-16" />
+              </div>
+            ))}
           </div>
-          <div className="flex flex-col items-center">
-            <p className="text-2xl font-bold text-accent">
-              {filteredEntries.length > 0
-                ? Math.round(filteredEntries.reduce((sum, e) => sum + e.intensity, 0) / filteredEntries.length)
-                : 0}
-            </p>
-            <p className="text-xs text-muted-foreground">Cường độ trung bình</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col items-center">
+              <p className="text-2xl font-bold text-primary">{filteredEntries.length}</p>
+              <p className="text-xs text-muted-foreground">Bản ghi tổng cộng</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-2xl font-bold text-accent">
+                {filteredEntries.length > 0
+                  ? Math.round(filteredEntries.reduce((sum, e) => sum + e.intensity, 0) / filteredEntries.length)
+                  : 0}
+              </p>
+              <p className="text-xs text-muted-foreground">Cường độ trung bình</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-2xl font-bold text-green-600">
+                {filteredEntries.filter((e) => e.intensity <= 2).length}
+              </p>
+              <p className="text-xs text-muted-foreground">Ngày tốt</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-2xl font-bold text-orange-600">
+                {filteredEntries.filter((e) => e.intensity >= 4).length}
+              </p>
+              <p className="text-xs text-muted-foreground">Ngày khó khăn</p>
+            </div>
           </div>
-          <div className="flex flex-col items-center">
-            <p className="text-2xl font-bold text-green-600">
-              {filteredEntries.filter((e) => e.intensity <= 2).length}
-            </p>
-            <p className="text-xs text-muted-foreground">Ngày tốt</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="text-2xl font-bold text-orange-600">
-              {filteredEntries.filter((e) => e.intensity >= 4).length}
-            </p>
-            <p className="text-xs text-muted-foreground">Ngày khó khăn</p>
-          </div>
-        </div>
+        )}
       </Card>
     </div>
   )

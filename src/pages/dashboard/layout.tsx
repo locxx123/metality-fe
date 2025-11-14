@@ -17,11 +17,61 @@ const menuItems = [
     { href: ROUTE_URL.RESOURCES, label: "Tài nguyên hỗ trợ", icon: <BookCopy /> },
 ]
 
+const pageInfos = [
+    {
+        path: ROUTE_URL.DASHBOARD,
+        title: "Trang chủ",
+        description: "Tổng quan cảm xúc và các hoạt động gần đây của bạn",
+    },
+    {
+        path: ROUTE_URL.SHARE_EMOTION,
+        title: "Chia sẻ cảm xúc",
+        description: "Ghi lại cảm xúc và suy nghĩ để cân bằng tâm trạng",
+    },
+    {
+        path: ROUTE_URL.CHAT,
+        title: "Chatbot tư vấn",
+        description: "Trò chuyện với trợ lý AI để được lắng nghe và hỗ trợ",
+    },
+    {
+        path: ROUTE_URL.JOURNAL,
+        title: "Nhật ký cảm xúc",
+        description: "Theo dõi hành trình cảm xúc và những khoảnh khắc đáng nhớ",
+    },
+    {
+        path: ROUTE_URL.ANALYTICS,
+        title: "Phân tích cảm xúc",
+        description: "Xem biểu đồ phân tích và xu hướng cảm xúc của bạn theo thời gian",
+    },
+    {
+        path: ROUTE_URL.RESOURCES,
+        title: "Tài nguyên hỗ trợ",
+        description: "Khám phá các bài viết, bài tập và tài nguyên giúp bạn cải thiện sức khỏe tinh thần",
+    },
+]
+
+const getPageInfo = (pathname: string) => {
+    const exactMatch = pageInfos.find((info) => pathname === info.path)
+    if (exactMatch) return exactMatch
+
+    const prefixMatch = pageInfos
+        .filter((info) => pathname.startsWith(`${info.path}/`))
+        .sort((a, b) => b.path.length - a.path.length)[0]
+
+    return (
+        prefixMatch || {
+            title: "Dashboard",
+            description: "Không gian của bạn để theo dõi cảm xúc và chăm sóc bản thân mỗi ngày",
+        }
+    )
+}
+
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const location = useLocation()
     const navigate = useNavigate()
     const { user, setUser } = useUserStore();
+    const currentPage = getPageInfo(location.pathname)
 
     useEffect(() => {
         // Lấy thông tin user khi component mount
@@ -107,7 +157,10 @@ export default function DashboardLayout() {
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Bar */}
                 <div className="bg-card border-b border-border p-4 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">{currentPage.title}</h1>
+                        <p className="text-sm text-muted-foreground mt-1">{currentPage.description}</p>
+                    </div>
                     <div className="flex items-center gap-4">
                         <DropdownMenu
                             trigger={

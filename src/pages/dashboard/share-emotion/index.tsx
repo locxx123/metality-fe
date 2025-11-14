@@ -71,13 +71,6 @@ export default function ShareEmotionPage() {
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Chia sẻ cảm xúc của bạn</h1>
-                <p className="text-muted-foreground">
-                    Ghi lại trạng thái tinh thần hiện tại và nhận được phản hồi tích cực từ trợ lý AI
-                </p>
-            </div>
 
             {/* Emotion Selection */}
             <Card className="p-6 border-0 shadow-sm">

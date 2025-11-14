@@ -168,13 +168,6 @@ export default function ResourcesPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Tài nguyên hỗ trợ</h1>
-        <p className="text-muted-foreground">
-          Khám phá các bài viết, kỹ thuật, và tài nguyên giúp cải thiện sức khỏe tâm lý
-        </p>
-      </div>
 
       {/* Category Tabs */}
       <div className="flex gap-2 border-b border-border">

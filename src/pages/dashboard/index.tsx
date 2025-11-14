@@ -6,6 +6,37 @@ import { BotMessageSquare, ChartNoAxesColumn, Notebook, Smile } from "lucide-rea
 import { getDashboardStats, getRecentActivities } from "@/services/dashboardServices"
 import { showError } from "@/utils/toast"
 
+const StatsSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    {[...Array(4)].map((_, i) => (
+      <Card key={i} className="p-6 border-0 shadow-sm">
+        <div className="space-y-3 animate-pulse">
+          <div className="h-3 bg-muted rounded w-24" />
+          <div className="flex items-baseline gap-2">
+            <div className="h-8 bg-muted rounded w-16" />
+            <div className="h-4 bg-muted rounded w-10" />
+          </div>
+          <div className="h-6 bg-muted rounded w-10" />
+        </div>
+      </Card>
+    ))}
+  </div>
+)
+
+const ActivitiesSkeleton = () => (
+  <div className="space-y-4">
+    {[...Array(4)].map((_, i) => (
+      <div key={i} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0 animate-pulse">
+        <div className="w-3 h-3 bg-muted rounded-full mt-1" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-muted rounded w-3/4" />
+          <div className="h-3 bg-muted rounded w-1/4" />
+        </div>
+      </div>
+    ))}
+  </div>
+)
+
 export default function DashboardPage() {
   const [stats, setStats] = useState([
     { label: "Cảm xúc hôm nay", value: "😊", icon: <Smile /> },
@@ -80,22 +111,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => (
-          <Card key={i} className="p-6 border-0 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-foreground">{stat.value}</span>
-                  {stat.unit && <span className="text-sm text-muted-foreground">{stat.unit}</span>}
+      {isLoading ? (
+        <StatsSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, i) => (
+            <Card key={i} className="p-6 border-0 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-foreground">{stat.value}</span>
+                    {stat.unit && <span className="text-sm text-muted-foreground">{stat.unit}</span>}
+                  </div>
                 </div>
+                <span className="text-3xl">{stat.icon}</span>
               </div>
-              <span className="text-3xl">{stat.icon}</span>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div>
@@ -120,9 +155,9 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-4">Hoạt động gần đây</h3>
-        <Card className="p-6 border-0 shadow-sm">
+        <Card className="p-6 border-0 shadow-sm min-h-[220px]">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Đang tải...</div>
+            <ActivitiesSkeleton />
           ) : activities.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">Chưa có hoạt động nào</div>
           ) : (

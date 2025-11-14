@@ -43,6 +43,10 @@ interface TrendsResponse {
 
 const TIME_RANGE_OPTIONS: TimeRange[] = ["week", "month", "year"]
 
+const SkeletonBlock = ({ className }: { className?: string }) => (
+    <div className={`bg-muted rounded-md animate-pulse ${className ?? ""}`} />
+)
+
 export default function AnalyticsPage() {
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -107,16 +111,10 @@ export default function AnalyticsPage() {
         1
     )
 
-    const { positiveCount, negativeCount, neutralCount, totalEmotions } = statistics
+    const { positiveCount, negativeCount, totalEmotions } = statistics
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Phân tích xu hướng cảm xúc</h1>
-                <p className="text-muted-foreground">Xem biểu đồ phân tích và xu hướng cảm xúc của bạn theo thời gian</p>
-            </div>
-
             {/* Time Range Selector */}
             <div className="flex gap-2">
                 {TIME_RANGE_OPTIONS.map((range) => (
@@ -140,52 +138,78 @@ export default function AnalyticsPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-6 border-0 shadow-sm">
-                    <div className="flex items-start justify-between mb-2">
-                        <div>
-                            <p className="text-sm text-muted-foreground mb-1">Cảm xúc tích cực</p>
-                            <p className="text-3xl font-bold text-green-600">{positiveCount}</p>
-                        </div>
-                        <span className="text-3xl">😊</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                        {totalEmotions > 0 ? Math.round((positiveCount / totalEmotions) * 100) : 0}% tổng số
-                    </p>
-                </Card>
+                {loading ? (
+                    [...Array(3)].map((_, index) => (
+                        <Card key={index} className="p-6 border-0 shadow-sm">
+                            <div className="space-y-3">
+                                <SkeletonBlock className="h-3 w-24" />
+                                <SkeletonBlock className="h-8 w-16" />
+                                <SkeletonBlock className="h-3 w-32" />
+                            </div>
+                        </Card>
+                    ))
+                ) : (
+                    <>
+                        <Card className="p-6 border-0 shadow-sm">
+                            <div className="flex items-start justify-between mb-2">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-1">Cảm xúc tích cực</p>
+                                    <p className="text-3xl font-bold text-green-600">{positiveCount}</p>
+                                </div>
+                                <span className="text-3xl">😊</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {totalEmotions > 0 ? Math.round((positiveCount / totalEmotions) * 100) : 0}% tổng số
+                            </p>
+                        </Card>
 
-                <Card className="p-6 border-0 shadow-sm">
-                    <div className="flex items-start justify-between mb-2">
-                        <div>
-                            <p className="text-sm text-muted-foreground mb-1">Cảm xúc tiêu cực</p>
-                            <p className="text-3xl font-bold text-orange-600">{negativeCount}</p>
-                        </div>
-                        <span className="text-3xl">😔</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                        {totalEmotions > 0 ? Math.round((negativeCount / totalEmotions) * 100) : 0}% tổng số
-                    </p>
-                </Card>
+                        <Card className="p-6 border-0 shadow-sm">
+                            <div className="flex items-start justify-between mb-2">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-1">Cảm xúc tiêu cực</p>
+                                    <p className="text-3xl font-bold text-orange-600">{negativeCount}</p>
+                                </div>
+                                <span className="text-3xl">😔</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {totalEmotions > 0 ? Math.round((negativeCount / totalEmotions) * 100) : 0}% tổng số
+                            </p>
+                        </Card>
 
-                <Card className="p-6 border-0 shadow-sm">
-                    <div className="flex items-start justify-between mb-2">
-                        <div>
-                            <p className="text-sm text-muted-foreground mb-1">Bản ghi tổng cộng</p>
-                            <p className="text-3xl font-bold text-primary">{totalEmotions}</p>
-                        </div>
-                        <span className="text-3xl"><ChartNoAxesColumn /></span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                        {timeRange === "week" ? "Trong tuần này" : timeRange === "month" ? "Trong tháng này" : "Trong năm này"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Cảm xúc trung bình: {neutralCount}</p>
-                </Card>
+                        <Card className="p-6 border-0 shadow-sm">
+                            <div className="flex items-start justify-between mb-2">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-1">Bản ghi tổng cộng</p>
+                                    <p className="text-3xl font-bold text-primary">{totalEmotions}</p>
+                                </div>
+                                <span className="text-3xl"><ChartNoAxesColumn /></span>
+                            </div>
+                        </Card>
+                    </>
+                )}
             </div>
 
             {/* Emotion Distribution Chart */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Phân bố cảm xúc</h2>
                 {loading ? (
-                    <div className="text-center py-8 text-muted-foreground">Đang tải...</div>
+                    <div className="space-y-4">
+                        {[...Array(4)].map((_, idx) => (
+                            <div key={idx} className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <SkeletonBlock className="w-10 h-10 rounded-full" />
+                                        <div className="space-y-2">
+                                            <SkeletonBlock className="h-3 w-32" />
+                                            <SkeletonBlock className="h-2 w-20" />
+                                        </div>
+                                    </div>
+                                    <SkeletonBlock className="h-4 w-12" />
+                                </div>
+                                <SkeletonBlock className="h-2 w-full" />
+                            </div>
+                        ))}
+                    </div>
                 ) : emotionStats.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">Chưa có dữ liệu cảm xúc</div>
                 ) : (
@@ -222,7 +246,28 @@ export default function AnalyticsPage() {
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Biểu đồ cảm xúc hàng ngày</h2>
                 {loading ? (
-                    <div className="text-center py-8 text-muted-foreground">Đang tải...</div>
+                    <div className="space-y-6">
+                        <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg">
+                            {[...Array(7)].map((_, idx) => (
+                                <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                                    <div className="flex items-end justify-center gap-2 h-60">
+                                        <SkeletonBlock className="w-4 h-16" />
+                                        <SkeletonBlock className="w-4 h-12" />
+                                        <SkeletonBlock className="w-4 h-8" />
+                                    </div>
+                                    <SkeletonBlock className="h-3 w-10" />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex gap-4">
+                            {[...Array(3)].map((_, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                    <SkeletonBlock className="w-4 h-4 rounded" />
+                                    <SkeletonBlock className="h-3 w-20" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 ) : (
                     <div className="space-y-6">
                         <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg">
@@ -282,7 +327,11 @@ export default function AnalyticsPage() {
             <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Nhận xét từ AI</h2>
                 {loading ? (
-                    <div className="text-center py-4 text-muted-foreground">Đang tải...</div>
+                    <div className="space-y-3">
+                        {[...Array(3)].map((_, idx) => (
+                            <SkeletonBlock key={idx} className="h-4 w-full" />
+                        ))}
+                    </div>
                 ) : insights.length === 0 ? (
                     <div className="text-center py-4 text-muted-foreground">Chưa có nhận xét</div>
                 ) : (

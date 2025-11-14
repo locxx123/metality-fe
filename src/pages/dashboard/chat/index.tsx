@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { sendMessage, getConversation, getSessions, createSession, type ChatSession } from "@/services/chatServices"
-import { showError, showSuccess } from "@/utils/toast"
+import { showError } from "@/utils/toast"
 import { Plus, MessageSquare } from "lucide-react"
 import { ROUTE_URL } from "@/constants/routes"
+import { capitalizeFirstLetter } from "@/utils/general"
 
 interface Message {
   id: string
@@ -15,6 +16,71 @@ interface Message {
   content: string
   timestamp: Date
   emotion?: string
+}
+
+// Component để format text với markdown đơn giản
+const FormattedMessage = ({ content }: { content: string }) => {
+  // Split by double newlines để tạo paragraphs, nhưng giữ lại single newlines trong paragraph
+  const paragraphs = content.split(/\n\n+/).filter(p => p.trim())
+  
+  const parseBold = (text: string, keyPrefix: string): (string | JSX.Element)[] => {
+    const parts: (string | JSX.Element)[] = []
+    const boldRegex = /\*\*(.+?)\*\*/g
+    let lastIndex = 0
+    let match
+    let keyIndex = 0
+    
+    while ((match = boldRegex.exec(text)) !== null) {
+      // Add text before bold
+      if (match.index > lastIndex) {
+        const beforeText = text.substring(lastIndex, match.index)
+        if (beforeText) {
+          parts.push(beforeText)
+        }
+      }
+      // Add bold text
+      parts.push(
+        <strong key={`${keyPrefix}-bold-${keyIndex++}`} className="font-semibold">
+          {match[1]}
+        </strong>
+      )
+      lastIndex = match.index + match[0].length
+    }
+    
+    // Add remaining text
+    if (lastIndex < text.length) {
+      const remainingText = text.substring(lastIndex)
+      if (remainingText) {
+        parts.push(remainingText)
+      }
+    }
+    
+    // If no bold found, return the original text
+    return parts.length > 0 ? parts : [text]
+  }
+  
+  return (
+    <div className="space-y-3">
+      {paragraphs.map((paragraph, idx) => {
+        // Replace single newlines with <br /> và parse bold
+        const lines = paragraph.split('\n')
+        
+        return (
+          <div key={idx} className="space-y-1">
+            {lines.map((line, lineIdx) => {
+              const parsed = parseBold(line.trim(), `para-${idx}-line-${lineIdx}`)
+              return (
+                <p key={lineIdx} className="text-sm leading-relaxed">
+                  {parsed}
+                  {lineIdx < lines.length - 1 && <br />}
+                </p>
+              )
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function ChatPage() {
@@ -65,7 +131,6 @@ export default function ChatPage() {
         setMessages([])
         // Navigate đến URL mới với sessionId
         navigate(`${ROUTE_URL.CHAT}/${newSession.id}`, { replace: true })
-        showSuccess("Thành công", "Đã tạo cuộc trò chuyện mới")
       }
     } catch (error: any) {
       console.error("Failed to create session:", error)
@@ -202,7 +267,7 @@ export default function ChatPage() {
           <div className="p-4 border-b border-border">
             <Button
               onClick={handleNewChat}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="w-4 h-4 mr-2" />
               Cuộc trò chuyện mới
@@ -232,7 +297,7 @@ export default function ChatPage() {
                     <div className="flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{session.title}</p>
+                        <p className="text-sm font-medium truncate">{capitalizeFirstLetter(session.title)}</p>
                       </div>
                     </div>
                   </button>
@@ -245,12 +310,6 @@ export default function ChatPage() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Trợ lý tư vấn AI</h1>
-          <p className="text-muted-foreground">Trò chuyện với trợ lý ảo thông minh để nhận lời khuyên và hỗ trợ tâm lý</p>
-        </div>
-
       {/* Chat Area */}
       <Card className="flex-1 overflow-hidden flex flex-col border-0 shadow-sm mb-4">
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background to-muted/20">
@@ -276,7 +335,7 @@ export default function ChatPage() {
                       onClick={() => {
                         setInput(prompt)
                       }}
-                      className="block w-full text-left px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-sm font-medium"
+                      className="block cursor-pointer w-full text-left px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-sm font-medium"
                     >
                       {prompt}
                     </button>
@@ -295,8 +354,12 @@ export default function ChatPage() {
                     : "bg-muted text-foreground rounded-bl-none"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
+                {message.type === "assistant" ? (
+                  <FormattedMessage content={message.content} />
+                ) : (
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                )}
+                <span className="text-xs opacity-70 mt-2 block">
                   {message.timestamp.toLocaleTimeString("vi-VN", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -342,7 +405,7 @@ export default function ChatPage() {
           <Button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="bg-primary cursor-pointer hover:bg-primary/90 text-primary-foreground"
           >
             Gửi
           </Button>
