@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { ROUTE_URL } from "@/constants/routes"
 import { BotMessageSquare, ChartNoAxesColumn, Notebook, Smile } from "lucide-react"
 import { getDashboardStats, getRecentActivities } from "@/services/dashboardServices"
-import { showError } from "@/utils/toast"
+import { showError, showSuccess } from "@/utils/toast"
+import { getProfile } from "@/services/authServices"
+import useUserStore from "@/store/userStore"
 
 const StatsSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -38,6 +40,8 @@ const ActivitiesSkeleton = () => (
 )
 
 export default function DashboardPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { setUser } = useUserStore()
   const [stats, setStats] = useState([
     { label: "Cảm xúc hôm nay", value: "😊", icon: <Smile /> },
     { label: "Nhật ký ghi chép", value: "0", icon: <Notebook />, unit: "lần" },
@@ -46,6 +50,33 @@ export default function DashboardPage() {
   ])
   const [activities, setActivities] = useState<Array<{ time: string; action: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  // Handle OAuth callbacks (Google and Facebook)
+  useEffect(() => {
+    const googleAuth = searchParams.get("google_auth")
+    const facebookAuth = searchParams.get("facebook_auth")
+    
+    if (googleAuth === "success" || facebookAuth === "success") {
+      // Fetch user profile and update store
+      const fetchUserProfile = async () => {
+        try {
+          const response = await getProfile()
+          if (response.success && response.data.user) {
+            setUser(response.data.user)
+            showSuccess("Đăng nhập thành công!", "Chào mừng bạn trở lại")
+          }
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error)
+        }
+      }
+      fetchUserProfile()
+      // Remove query parameters from URL
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete("google_auth")
+      newParams.delete("facebook_auth")
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, setUser])
 
   useEffect(() => {
     const loadDashboardData = async () => {

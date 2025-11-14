@@ -52,3 +52,15 @@ export const logout = async () => {
     }
 }
 
+export const loginWithGoogle = () => {
+    // Use the same baseURL as axios instance
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
+    window.location.href = `${baseURL}/auth/google`;
+}
+
+export const loginWithFacebook = () => {
+    // Use the same baseURL as axios instance
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
+    window.location.href = `${baseURL}/auth/facebook`;
+}
+
