@@ -46,7 +46,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Logo />
-          <h1 className="text-3xl font-bold text-foreground mb-2">MindScape2</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">MindScape</h1>
           <p className="text-muted-foreground">Lắng nghe mọi cảm xúc, thấu hiểu mọi buồn vui.</p>
         </div>
 
