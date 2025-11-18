@@ -134,78 +134,89 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:space-y-8">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 border border-primary/20">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Chào mừng trở lại!</h2>
-        <p className="text-muted-foreground">Hôm nay là một ngày tốt để chăm sóc sức khỏe tâm lý của bạn.</p>
-      </div>
+      <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-2xl p-6 border border-primary/20 shadow-sm">
+        <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Chào mừng trở lại!</h2>
+        <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
+          Hôm nay là một ngày tốt để chăm sóc sức khỏe tâm lý của bạn.
+        </p>
+      </section>
 
       {/* Stats Grid */}
-      {isLoading ? (
-        <StatsSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, i) => (
-            <Card key={i} className="p-6 border-0 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-foreground">{stat.value}</span>
-                    {stat.unit && <span className="text-sm text-muted-foreground">{stat.unit}</span>}
+      <section>
+        {isLoading ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {stats.map((stat, i) => (
+              <Card key={i} className="p-6 border-0 shadow-sm h-full">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</p>
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-3xl font-bold text-foreground">{stat.value}</span>
+                      {stat.unit && <span className="text-sm text-muted-foreground">{stat.unit}</span>}
+                    </div>
                   </div>
-                </div>
-                <span className="text-3xl">{stat.icon}</span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Hành động nhanh</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {quickActions.map((action, i) => (
-            <Link key={i} to={action.href}>
-              <Card className="p-6 border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full">
-                <div className="flex items-start gap-4">
-                  <span className="text-3xl">{action.icon}</span>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">{action.title}</h4>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
+                  <span className="text-3xl shrink-0">{stat.icon}</span>
                 </div>
               </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* Recent Activity */}
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Hoạt động gần đây</h3>
-        <Card className="p-6 border-0 shadow-sm min-h-[220px]">
-          {isLoading ? (
-            <ActivitiesSkeleton />
-          ) : activities.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Chưa có hoạt động nào</div>
-          ) : (
-            <div className="space-y-4">
-              {activities.map((activity, i) => (
-                <div key={i} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                  <div className="text-primary font-bold text-lg">●</div>
-                  <div>
-                    <p className="text-foreground font-medium">{activity.action}</p>
-                    <p className="text-sm text-muted-foreground">{activity.time}</p>
+      {/* Quick Actions + Activities */}
+      <section className="grid gap-6 xl:gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Hành động nhanh</h3>
+            <p className="text-sm text-muted-foreground sm:text-right">
+              Ghi lại cảm xúc, trao đổi với AI hoặc xem nhật ký chỉ với một chạm.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quickActions.map((action, i) => (
+              <Link key={i} to={action.href} className="h-full">
+                <Card className="p-6 border-0 shadow-sm hover:shadow-md transition-shadow h-full">
+                  <div className="flex items-start gap-4">
+                    <span className="text-3xl shrink-0">{action.icon}</span>
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-foreground">{action.title}</h4>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground">Hoạt động gần đây</h3>
+          <Card className="p-6 border-0 shadow-sm min-h-[220px] h-full flex flex-col">
+            {isLoading ? (
+              <ActivitiesSkeleton />
+            ) : activities.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">Chưa có hoạt động nào</div>
+            ) : (
+              <div className="space-y-4 overflow-auto pr-1">
+                {activities.map((activity, i) => (
+                  <div key={i} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                    <div className="text-primary font-bold text-lg">●</div>
+                    <div>
+                      <p className="text-foreground font-medium">{activity.action}</p>
+                      <p className="text-sm text-muted-foreground">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+      </section>
     </div>
   )
 }

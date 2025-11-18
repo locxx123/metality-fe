@@ -114,9 +114,9 @@ export default function AnalyticsPage() {
     const { positiveCount, negativeCount, totalEmotions } = statistics
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6 lg:space-y-8 px-3 sm:px-0">
             {/* Time Range Selector */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
                 {TIME_RANGE_OPTIONS.map((range) => (
                     <button
                         key={range}
@@ -131,13 +131,13 @@ export default function AnalyticsPage() {
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}
                     >
-                        {range === "week" ? "Tuần này" : range === "month" ? "Tháng này" : "Năm này"}
+                        {range === "week" ? "7 ngày" : range === "month" ? "30 ngày" : "365 ngày"}
                     </button>
                 ))}
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {loading ? (
                     [...Array(3)].map((_, index) => (
                         <Card key={index} className="p-6 border-0 shadow-sm">
@@ -247,8 +247,9 @@ export default function AnalyticsPage() {
                 <h2 className="text-lg font-semibold text-foreground mb-4">Biểu đồ cảm xúc hàng ngày</h2>
                 {loading ? (
                     <div className="space-y-6">
-                        <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg">
-                            {[...Array(7)].map((_, idx) => (
+                        <div className="overflow-x-auto pb-2">
+                            <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg min-w-[600px]">
+                                {[...Array(7)].map((_, idx) => (
                                 <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                                     <div className="flex items-end justify-center gap-2 h-60">
                                         <SkeletonBlock className="w-4 h-16" />
@@ -258,8 +259,9 @@ export default function AnalyticsPage() {
                                     <SkeletonBlock className="h-3 w-10" />
                                 </div>
                             ))}
+                            </div>
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             {[...Array(3)].map((_, idx) => (
                                 <div key={idx} className="flex items-center gap-2">
                                     <SkeletonBlock className="w-4 h-4 rounded" />
@@ -270,8 +272,9 @@ export default function AnalyticsPage() {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg">
-                            {dailyMoodData.map((day, i) => {
+                        <div className="overflow-x-auto pb-2">
+                            <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg min-w-[600px]">
+                                {dailyMoodData.map((day, i) => {
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                                         <div className="flex items-end justify-center gap-2 h-60">
@@ -304,8 +307,9 @@ export default function AnalyticsPage() {
                                     </div>
                                 )
                             })}
+                            </div>
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 bg-green-500 rounded" />
                                 <span className="text-sm text-muted-foreground">Tích cực</span>
@@ -348,7 +352,7 @@ export default function AnalyticsPage() {
             {/* Recommendations */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Hoạt động được gợi ý</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                         { title: "Tập thiền", description: "Giúp giảm bớt lo lắng và tăng bình tĩnh", icon: "🧘" },
                         { title: "Hoạt động thể chất", description: "Tăng endorphin và cảm xúc tích cực", icon: "🏃" },

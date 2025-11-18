@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ROUTE_URL } from "@/constants/routes"
 import logo from "@/resources/images/logo.png";
-import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User } from "lucide-react"
+import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User, Menu, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { logout, getProfile } from "@/services/authServices"
 import { showSuccess, showError } from "@/utils/toast"
@@ -68,6 +68,7 @@ const getPageInfo = (pathname: string) => {
 
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
     const location = useLocation()
     const navigate = useNavigate()
     const { user, setUser } = useUserStore();
@@ -88,6 +89,11 @@ export default function DashboardLayout() {
         if (!user) fetchUser()
     }, [])
 
+    useEffect(() => {
+        // Close mobile sidebar when navigating
+        setMobileSidebarOpen(false)
+    }, [location.pathname])
+
     const handleLogout = async () => {
         try {
             await logout()
@@ -100,15 +106,27 @@ export default function DashboardLayout() {
         }
     }
 
+    const toggleSidebarWidth = () => setSidebarOpen((prev) => !prev)
+
+    const desktopWidthClass = sidebarOpen ? "lg:w-64" : "lg:w-20"
+
     return (
-        <div className="flex h-screen bg-background">
+        <div className="min-h-screen bg-background lg:flex">
+            {/* Mobile overlay */}
+            {mobileSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+                    onClick={() => setMobileSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
             <aside
-                className={`${sidebarOpen ? "w-64" : "w-20"
-                    } bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col`}
+                className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 transform ${desktopWidthClass} w-64
+                    ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static`}
             >
                 {/* Logo */}
-                <div className="px-6 py-2 border-b border-sidebar-border">
+                <div className="px-6 py-3 border-b border-sidebar-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <img
                             src={logo}
@@ -117,6 +135,14 @@ export default function DashboardLayout() {
                         />
                         {sidebarOpen && <span className="font-bold text-foreground">MindScape</span>}
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="lg:hidden"
+                        onClick={() => setMobileSidebarOpen(false)}
+                    >
+                        <X className="w-5 h-5" />
+                    </Button>
                 </div>
 
                 {/* Menu */}
@@ -134,7 +160,7 @@ export default function DashboardLayout() {
                                 title={!sidebarOpen ? item.label : undefined}
                             >
                                 <span className="text-xl flex-shrink-0">{item.icon}</span>
-                                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                                {sidebarOpen && <span className="text-sm font-medium truncate">{item.label}</span>}
                             </Link>
                         )
                     })}
@@ -145,7 +171,7 @@ export default function DashboardLayout() {
                     <Button
                         variant="ghost"
                         className="w-full justify-start"
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        onClick={toggleSidebarWidth}
                         title="Toggle sidebar"
                     >
                         <span className="text-lg">{sidebarOpen ? "◀" : "▶"}</span>
@@ -156,10 +182,21 @@ export default function DashboardLayout() {
             {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Bar */}
-                <div className="bg-card border-b border-border p-4 flex items-center justify-between">
-                    <div>
+                <div className="bg-card border-b border-border p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="lg:hidden"
+                            onClick={() => setMobileSidebarOpen(true)}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </Button>
+
+                        <div>
                         <h1 className="text-2xl font-bold text-foreground">{currentPage.title}</h1>
                         <p className="text-sm text-muted-foreground mt-1">{currentPage.description}</p>
+                    </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <DropdownMenu

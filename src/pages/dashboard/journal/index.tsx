@@ -119,7 +119,7 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 lg:space-y-8 px-3 sm:px-0">
 
       {/* Search and Filter */}
       <Card className="p-4 border-0 shadow-sm">
@@ -166,7 +166,7 @@ export default function JournalPage() {
       </Card>
 
       {/* View Mode Switcher */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(["timeline", "list"] as const).map((mode) => (
           <button
             key={mode}
@@ -192,7 +192,7 @@ export default function JournalPage() {
               {filteredEntries.map((entry, index) => (
                 <div key={entry.id} className="relative">
                   {index < filteredEntries.length - 1 && <div className="absolute left-6 top-20 w-1 h-8 bg-border" />}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <div className="flex flex-col items-center pt-2 flex-shrink-0">
                       <div
                         className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-4 border-background ${emotionColors[entry.emotion] || "bg-gray-100"}`}
@@ -255,7 +255,7 @@ export default function JournalPage() {
                   onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
                   className="p-4 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
                     <div className="text-3xl flex-shrink-0">{entry.emoji}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">
@@ -307,7 +307,7 @@ export default function JournalPage() {
       <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5">
         <h3 className="font-semibold text-foreground mb-4">Tóm tắt</h3>
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[...Array(4)].map((_, idx) => (
               <div key={idx} className="flex flex-col items-center space-y-2">
                 <SkeletonBlock className="h-8 w-12" />

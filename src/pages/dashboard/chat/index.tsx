@@ -259,10 +259,10 @@ export default function ChatPage() {
   ]
 
   return (
-    <div className="flex h-[calc(100vh-100px)] gap-4 pb-4">
+    <div className="flex flex-col gap-4 pb-4 lg:flex-row lg:h-[calc(100vh-140px)]">
       {/* Sidebar - Sessions List */}
-      <div className="w-64 flex-shrink-0">
-        <Card className="h-full flex flex-col border-0 shadow-sm">
+      <div className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">
+        <Card className="h-full max-h-[420px] lg:max-h-none flex flex-col border-0 shadow-sm">
           {/* Header với nút New Chat */}
           <div className="p-4 border-b border-border">
             <Button
@@ -309,7 +309,7 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 order-1 lg:order-2">
       {/* Chat Area */}
       <Card className="flex-1 overflow-hidden flex flex-col border-0 shadow-sm mb-4">
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background to-muted/20">
@@ -393,19 +393,19 @@ export default function ChatPage() {
 
       {/* Input Area */}
       <Card className="p-4 border-0 shadow-sm">
-        <form onSubmit={handleSendMessage} className="flex gap-3">
+        <form onSubmit={handleSendMessage} className="flex flex-col sm:flex-row gap-3">
           <Input
             type="text"
             placeholder="Hãy chia sẻ cảm xúc của bạn..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 w-full"
           />
           <Button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="bg-primary cursor-pointer hover:bg-primary/90 text-primary-foreground"
+            className="bg-primary cursor-pointer hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
           >
             Gửi
           </Button>

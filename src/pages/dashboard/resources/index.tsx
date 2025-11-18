@@ -167,10 +167,10 @@ export default function ResourcesPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 lg:space-y-8 px-3 sm:px-0">
 
       {/* Category Tabs */}
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex gap-2 border-b border-border overflow-x-auto pb-1">
         {(["articles", "techniques", "resources"] as const).map((category) => (
           <button
             key={category}
@@ -190,7 +190,7 @@ export default function ResourcesPage() {
       </div>
 
       {/* Resources Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {currentResources.map((resource) => (
           <Card
             key={resource.id}
@@ -240,7 +240,7 @@ export default function ResourcesPage() {
       {/* Detail Modal */}
       {selectedResource && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center p-4 z-50 overflow-y-auto"
           onClick={() => setSelectedResource(null)}
         >
           <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto border-0" onClick={(e) => e.stopPropagation()}>
