@@ -9,12 +9,14 @@ import { ROUTE_URL } from "@/constants/routes"
 import { login, loginWithGoogle, loginWithFacebook } from "@/services/authServices"
 import { showSuccess, showError } from "@/utils/toast"
 import useUserStore from "@/store/userStore"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const { setUser } = useUserStore();
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,14 +74,24 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Mật khẩu</label>
-              <Input
-                type="password"
-                placeholder="Nhập mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
-                required
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Nhập mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -92,7 +104,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 text-center">
-            <Link to="#" className="text-sm text-primary hover:underline">
+            <Link to={ROUTE_URL.FORGOT_PASSWORD} className="text-sm text-primary hover:underline">
               Quên mật khẩu?
             </Link>
           </div>
