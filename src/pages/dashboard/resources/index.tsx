@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -141,10 +141,45 @@ const resources: Resource[] = [
   },
 ]
 
+const STORAGE_KEY = "mindscape_bookmarked_resources"
+
+// Helper function to load bookmarks from localStorage
+const loadBookmarksFromStorage = (): string[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        return parsed
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load bookmarks from localStorage:", error)
+  }
+  return []
+}
+
 export default function ResourcesPage() {
   const [activeCategory, setActiveCategory] = useState<ResourceCategory>("articles")
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
-  const [bookmarked, setBookmarked] = useState<string[]>([])
+  // Initialize state from localStorage immediately
+  const [bookmarked, setBookmarked] = useState<string[]>(() => loadBookmarksFromStorage())
+  const isInitialMount = useRef(true)
+
+  // Save bookmarks to localStorage whenever they change (but not on initial mount)
+  useEffect(() => {
+    // Skip saving on initial mount since we just loaded from storage
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarked))
+    } catch (error) {
+      console.error("Failed to save bookmarks to localStorage:", error)
+    }
+  }, [bookmarked])
 
   const toggleBookmark = (id: string) => {
     setBookmarked((prev) => (prev.includes(id) ? prev.filter((bid) => bid !== id) : [...prev, id]))
