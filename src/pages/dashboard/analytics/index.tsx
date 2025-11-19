@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
-import { getTrends } from "@/services/emotionServices"
+import { getTrends, getTrendsInsights } from "@/services/emotionServices"
 import { useToast } from "@/components/ui/use-toast"
 import { ChartNoAxesColumn } from "lucide-react"
 import { useSearchParams } from "react-router-dom"
@@ -22,6 +22,12 @@ interface DailyMoodData {
     negative: number
 }
 
+interface Recommendation {
+    title: string
+    description: string
+    icon: string
+}
+
 interface TrendsResponse {
     success: boolean
     data: {
@@ -38,10 +44,17 @@ interface TrendsResponse {
         emotionStats: EmotionData[]
         dailyMoodData: DailyMoodData[]
         insights: string[]
+        recommendations: Recommendation[]
     }
 }
 
 const TIME_RANGE_OPTIONS: TimeRange[] = ["week", "month", "year"]
+const DEFAULT_RECOMMENDATIONS: Recommendation[] = [
+    { title: "Thiền chánh niệm", description: "Ngồi yên 10 phút để quan sát hơi thở và lắng nghe cơ thể", icon: "🧘" },
+    { title: "Viết cảm nhận", description: "Ghi lại điều khiến bạn vui hoặc lo để hiểu rõ cảm xúc", icon: "✍️" },
+    { title: "Vận động nhẹ", description: "Đi bộ hoặc giãn cơ 15 phút giúp giải phóng năng lượng", icon: "🏃" },
+    { title: "Kết nối bạn bè", description: "Chia sẻ câu chuyện với người khiến bạn thấy an tâm", icon: "👥" },
+]
 
 const SkeletonBlock = ({ className }: { className?: string }) => (
     <div className={`bg-muted rounded-md animate-pulse ${className ?? ""}`} />
@@ -55,7 +68,8 @@ export default function AnalyticsPage() {
         ? (queryRange as TimeRange)
         : "week"
 
-    const [loading, setLoading] = useState(true)
+    const [statsLoading, setStatsLoading] = useState(true)
+    const [aiLoading, setAiLoading] = useState(true)
     const [emotionStats, setEmotionStats] = useState<EmotionData[]>([])
     const [dailyMoodData, setDailyMoodData] = useState<DailyMoodData[]>([])
     const [statistics, setStatistics] = useState({
@@ -65,6 +79,7 @@ export default function AnalyticsPage() {
         neutralCount: 0,
     })
     const [insights, setInsights] = useState<string[]>([])
+    const [recommendations, setRecommendations] = useState<Recommendation[]>(DEFAULT_RECOMMENDATIONS)
     const { toast } = useToast()
 
     useEffect(() => {
@@ -76,8 +91,8 @@ export default function AnalyticsPage() {
     }, [queryRange, searchParams, setSearchParams, timeRange])
 
     useEffect(() => {
-        const fetchTrends = async () => {
-            setLoading(true)
+        const fetchStats = async () => {
+            setStatsLoading(true)
             try {
                 const response = await getTrends({ period: timeRange }) as TrendsResponse
                 if (response.success && response.data) {
@@ -89,7 +104,6 @@ export default function AnalyticsPage() {
                         negativeCount: response.data.statistics.negativeCount,
                         neutralCount: response.data.statistics.neutralCount,
                     })
-                    setInsights(response.data.insights || [])
                 }
             } catch (error) {
                 console.error("Error fetching trends:", error)
@@ -99,11 +113,43 @@ export default function AnalyticsPage() {
                     description: "Không thể tải dữ liệu phân tích. Vui lòng thử lại.",
                 })
             } finally {
-                setLoading(false)
+                setStatsLoading(false)
             }
         }
 
-        fetchTrends()
+        fetchStats()
+    }, [timeRange, toast])
+
+    useEffect(() => {
+        const fetchAiSections = async () => {
+            setAiLoading(true)
+            setInsights([])
+            setRecommendations(DEFAULT_RECOMMENDATIONS)
+            try {
+                const response = await getTrendsInsights({ period: timeRange })
+                if (response.success && response.data) {
+                    setInsights(response.data.insights || [])
+                    const nextRecommendations = response.data.recommendations
+                    if (nextRecommendations && nextRecommendations.length > 0) {
+                        setRecommendations(nextRecommendations)
+                    } else {
+                        setRecommendations(DEFAULT_RECOMMENDATIONS)
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching AI insights:", error)
+                toast({
+                    variant: "destructive",
+                    title: "Lỗi",
+                    description: "Không thể tải nhận xét từ AI. Vui lòng thử lại.",
+                })
+                setRecommendations(DEFAULT_RECOMMENDATIONS)
+            } finally {
+                setAiLoading(false)
+            }
+        }
+
+        fetchAiSections()
     }, [timeRange, toast])
 
     const maxMoodValue = Math.max(
@@ -136,9 +182,31 @@ export default function AnalyticsPage() {
                 ))}
             </div>
 
+            {/* Insights */}
+            <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20">
+                <h2 className="text-lg font-semibold text-foreground mb-2">Nhận xét từ MindScape</h2>
+                {aiLoading ? (
+                    <div className="space-y-3">
+                        {[...Array(2)].map((_, idx) => (
+                            <SkeletonBlock key={idx} className="h-4 w-full" />
+                        ))}
+                    </div>
+                ) : insights.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">Chưa có nhận xét</div>
+                ) : (
+                    <div className="space-y-3 text-sm">
+                        {insights.map((insight, index) => (
+                            <p key={index} className="text-foreground">
+                                {insight}
+                            </p>
+                        ))}
+                    </div>
+                )}
+            </Card>
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {loading ? (
+                {statsLoading ? (
                     [...Array(3)].map((_, index) => (
                         <Card key={index} className="p-6 border-0 shadow-sm">
                             <div className="space-y-3">
@@ -192,7 +260,7 @@ export default function AnalyticsPage() {
             {/* Emotion Distribution Chart */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Phân bố cảm xúc</h2>
-                {loading ? (
+                {statsLoading ? (
                     <div className="space-y-4">
                         {[...Array(4)].map((_, idx) => (
                             <div key={idx} className="space-y-2">
@@ -245,7 +313,7 @@ export default function AnalyticsPage() {
             {/* Weekly Mood Chart */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Biểu đồ cảm xúc hàng ngày</h2>
-                {loading ? (
+                {statsLoading ? (
                     <div className="space-y-6">
                         <div className="overflow-x-auto pb-2">
                             <div className="flex items-end justify-between gap-4 h-64 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg min-w-[600px]">
@@ -327,49 +395,41 @@ export default function AnalyticsPage() {
                 )}
             </Card>
 
-            {/* Insights */}
-            <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Nhận xét từ AI</h2>
-                {loading ? (
-                    <div className="space-y-3">
-                        {[...Array(3)].map((_, idx) => (
-                            <SkeletonBlock key={idx} className="h-4 w-full" />
-                        ))}
-                    </div>
-                ) : insights.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">Chưa có nhận xét</div>
-                ) : (
-                    <div className="space-y-3 text-sm">
-                        {insights.map((insight, index) => (
-                            <p key={index} className="text-foreground">
-                                {insight}
-                            </p>
-                        ))}
-                    </div>
-                )}
-            </Card>
-
             {/* Recommendations */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Hoạt động được gợi ý</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                        { title: "Tập thiền", description: "Giúp giảm bớt lo lắng và tăng bình tĩnh", icon: "🧘" },
-                        { title: "Hoạt động thể chất", description: "Tăng endorphin và cảm xúc tích cực", icon: "🏃" },
-                        { title: "Ghi nhật ký", description: "Giúp bạn xử lý cảm xúc và suy ngẫm", icon: "✍️" },
-                        { title: "Kết nối xã hội", description: "Gặp gỡ bạn bè và người thân", icon: "👥" },
-                    ].map((activity, i) => (
-                        <div key={i} className="p-4 border border-border rounded-lg hover:border-primary transition-colors">
-                            <div className="flex gap-3 mb-2">
-                                <span className="text-2xl">{activity.icon}</span>
-                                <div>
-                                    <h3 className="font-semibold text-foreground">{activity.title}</h3>
-                                    <p className="text-sm text-muted-foreground">{activity.description}</p>
+                {aiLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[...Array(4)].map((_, idx) => (
+                            <div key={idx} className="p-4 border border-border rounded-lg">
+                                <div className="flex gap-3 mb-2">
+                                    <SkeletonBlock className="w-10 h-10 rounded-full" />
+                                    <div className="flex-1 space-y-2">
+                                        <SkeletonBlock className="h-4 w-32" />
+                                        <SkeletonBlock className="h-3 w-full" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {recommendations.map((activity, i) => (
+                            <div
+                                key={`${activity.title}-${i}`}
+                                className="p-4 border border-border rounded-lg hover:border-primary transition-colors"
+                            >
+                                <div className="flex gap-3 mb-2">
+                                    <span className="text-2xl">{activity.icon}</span>
+                                    <div>
+                                        <h3 className="font-semibold text-foreground">{activity.title}</h3>
+                                       <p className="text-sm text-muted-foreground">{activity.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Card>
         </div>
     )

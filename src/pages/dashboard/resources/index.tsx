@@ -1,53 +1,45 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { getPersonalizedResources, type SupportResource } from "@/services/resourceServices"
+import { showError } from "@/utils/toast"
 
 type ResourceCategory = "articles" | "techniques" | "resources"
 
-interface Resource {
-  id: string
-  title: string
-  description: string
-  icon: string
-  duration?: string
-  category?: string
-  difficulty?: "easy" | "medium" | "hard"
-}
-
-const articles: Resource[] = [
+const DEFAULT_RESOURCES: Record<ResourceCategory, SupportResource[]> = {
+  articles: [
   {
-    id: "1",
+    id: "article-1",
     title: "Hiểu biết về sức khỏe tâm lý",
     description: "Tìm hiểu các khái niệm cơ bản về sức khỏe tâm lý và tại sao nó quan trọng",
     icon: "📖",
     category: "Tâm lý",
   },
   {
-    id: "2",
+    id: "article-2",
     title: "Quản lý stress hàng ngày",
     description: "Các chiến lược hiệu quả để quản lý và giảm bớt stress trong cuộc sống hàng ngày",
     icon: "📚",
     category: "Stress",
   },
   {
-    id: "3",
+    id: "article-3",
     title: "Mất ngủ: Nguyên nhân và giải pháp",
     description: "Tìm hiểu về mất ngủ và các cách tự nhiên để cải thiện chất lượng giấc ngủ",
     icon: "🌙",
     category: "Giấc ngủ",
   },
   {
-    id: "4",
+    id: "article-4",
     title: "Xây dựng lòng tự trọng",
     description: "Cách phát triển và duy trì lòng tự trọng tích cực",
     icon: "💪",
     category: "Tự trọng",
   },
-]
-
-const techniques: Resource[] = [
+],
+  techniques: [
   {
-    id: "1",
+    id: "technique-1",
     title: "Hít thở sâu 4-7-8",
     description: "Kỹ thuật hít thở giúp giảm bớt căng thẳng và lo lắng trong vòng vài phút",
     icon: "🫁",
@@ -55,7 +47,7 @@ const techniques: Resource[] = [
     difficulty: "easy",
   },
   {
-    id: "2",
+    id: "technique-2",
     title: "Thiền tâm",
     description: "Hướng dẫn thiền cơ bản để tập trung và xây dựng bình tĩnh nội tâm",
     icon: "🧘",
@@ -63,7 +55,7 @@ const techniques: Resource[] = [
     difficulty: "medium",
   },
   {
-    id: "3",
+    id: "technique-3",
     title: "Viết cảm xúc",
     description: "Viết ra những cảm xúc của bạn để xử lý và giải tỏa stress",
     icon: "✍️",
@@ -71,7 +63,7 @@ const techniques: Resource[] = [
     difficulty: "easy",
   },
   {
-    id: "4",
+    id: "technique-4",
     title: "Quét cơ thể (Body Scan)",
     description: "Kỹ thuật thư giãn toàn thân bằng cách tập trung vào từng bộ phận cơ thể",
     icon: "💆",
@@ -79,67 +71,67 @@ const techniques: Resource[] = [
     difficulty: "medium",
   },
   {
-    id: "5",
-    title: "Luyện tập tương phản tiến thoái (PMR)",
+    id: "technique-5",
+    title: "Luyện tập thư giãn cơ",
     description: "Thay phiên căng và thư giãn các nhóm cơ để giảm bớt căng thẳng",
     icon: "🏋️",
     duration: "15 phút",
     difficulty: "easy",
   },
   {
-    id: "6",
+    id: "technique-6",
     title: "Hình ảnh hóa tích cực",
     description: "Sử dụng tưởng tượng để tạo trạng thái tâm lý tích cực",
     icon: "🌈",
     duration: "10 phút",
     difficulty: "medium",
   },
-]
-
-const resources: Resource[] = [
+],
+  resources: [
   {
-    id: "1",
+    id: "resource-1",
     title: "Playlist âm nhạc thư giãn",
     description: "Các bài nhạc được chọn lọc giúp thư giãn và cải thiện tâm trạng",
     icon: "🎵",
     category: "Âm nhạc",
   },
   {
-    id: "2",
+    id: "resource-2",
     title: "Video yoga cơ bản",
     description: "Hướng dẫn video yoga dễ theo dõi cho người mới bắt đầu",
     icon: "🧘‍♀️",
     category: "Video",
   },
   {
-    id: "3",
+    id: "resource-3",
     title: "Ứng dụng thiền Mindfulness",
     description: "Ứng dụng di động giúp luyện tập thiền hằng ngày",
     icon: "📱",
     category: "Ứng dụng",
   },
   {
-    id: "4",
+    id: "resource-4",
     title: "Cộng đồng hỗ trợ tâm lý",
     description: "Kết nối với những người khác đang trên con đường tương tự",
     icon: "👥",
     category: "Cộng đồng",
   },
   {
-    id: "5",
+    id: "resource-5",
     title: "Liên hệ chuyên gia tâm lý",
     description: "Danh sách các chuyên gia tâm lý được xác thực nếu bạn cần tư vấn chuyên sâu",
     icon: "👨‍⚕️",
     category: "Chuyên gia",
   },
   {
-    id: "6",
+    id: "resource-6",
     title: "Sách hay về sức khỏe tâm lý",
     description: "Các cuốn sách được khuyến nghị về sức khỏe tâm lý và phát triển bản thân",
     icon: "📕",
     category: "Sách",
   },
-]
+],
+}
 
 const STORAGE_KEY = "mindscape_bookmarked_resources"
 
@@ -161,7 +153,9 @@ const loadBookmarksFromStorage = (): string[] => {
 
 export default function ResourcesPage() {
   const [activeCategory, setActiveCategory] = useState<ResourceCategory>("articles")
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
+  const [selectedResource, setSelectedResource] = useState<SupportResource | null>(null)
+  const [resourcesData, setResourcesData] = useState<Record<ResourceCategory, SupportResource[]>>(DEFAULT_RESOURCES)
+  const [isLoading, setIsLoading] = useState(true)
   // Initialize state from localStorage immediately
   const [bookmarked, setBookmarked] = useState<string[]>(() => loadBookmarksFromStorage())
   const isInitialMount = useRef(true)
@@ -181,12 +175,52 @@ export default function ResourcesPage() {
     }
   }, [bookmarked])
 
+  useEffect(() => {
+    const fetchResources = async () => {
+      setIsLoading(true)
+      try {
+        const response = await getPersonalizedResources()
+        if (response.success && response.data) {
+          setResourcesData({
+            articles: response.data.articles ?? [],
+            techniques: response.data.techniques ?? [],
+            resources: response.data.resources ?? [],
+          })
+        } else {
+          showError("Lỗi", response.msg || "Không thể tải tài nguyên gợi ý.")
+          setResourcesData(DEFAULT_RESOURCES)
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch resources:", error)
+        showError("Lỗi", error?.response?.data?.msg || "Không thể tải tài nguyên gợi ý.")
+        setResourcesData(DEFAULT_RESOURCES)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchResources()
+  }, [])
+
   const toggleBookmark = (id: string) => {
     setBookmarked((prev) => (prev.includes(id) ? prev.filter((bid) => bid !== id) : [...prev, id]))
   }
 
-  const currentResources =
-    activeCategory === "articles" ? articles : activeCategory === "techniques" ? techniques : resources
+  const currentResources = resourcesData[activeCategory]
+  const allResources = useMemo(
+    () => [...resourcesData.articles, ...resourcesData.techniques, ...resourcesData.resources],
+    [resourcesData],
+  )
+
+  useEffect(() => {
+    if (!selectedResource) return
+    const updatedResource = allResources.find((item) => item.id === selectedResource.id)
+    if (updatedResource && updatedResource !== selectedResource) {
+      setSelectedResource(updatedResource)
+    }
+  }, [allResources, selectedResource])
+
+  const bookmarkedItems = useMemo(() => allResources.filter((r) => bookmarked.includes(r.id)), [allResources, bookmarked])
 
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty) {
@@ -225,52 +259,73 @@ export default function ResourcesPage() {
       </div>
 
       {/* Resources Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {currentResources.map((resource) => (
-          <Card
-            key={resource.id}
-            className="p-5 border-0 shadow-sm cursor-pointer hover:shadow-md transition-all"
-            onClick={() => setSelectedResource(resource)}
-          >
-            <div className="flex items-start gap-4">
-              <span className="text-4xl flex-shrink-0">{resource.icon}</span>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground mb-1 line-clamp-2">{resource.title}</h3>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{resource.description}</p>
-                <div className="flex gap-2 flex-wrap">
-                  {resource.duration && (
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                      ⏱️ {resource.duration}
-                    </span>
-                  )}
-                  {resource.category && (
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                      {resource.category}
-                    </span>
-                  )}
-                  {resource.difficulty && (
-                    <span
-                      className={`text-xs px-2 py-1 rounded font-medium ${getDifficultyColor(resource.difficulty)}`}
-                    >
-                      {resource.difficulty === "easy" ? "Dễ" : resource.difficulty === "medium" ? "Trung bình" : "Khó"}
-                    </span>
-                  )}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, idx) => (
+            <Card key={idx} className="p-5 border-0 shadow-sm">
+              <div className="flex items-start gap-4 animate-pulse">
+                <div className="w-12 h-12 rounded-full bg-muted" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-full" />
+                  <div className="h-3 bg-muted rounded w-2/3" />
                 </div>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleBookmark(resource.id)
-                }}
-                className="flex-shrink-0 text-lg transition-transform hover:scale-110"
-                title="Bookmark"
-              >
-                {bookmarked.includes(resource.id) ? "⭐" : "☆"}
-              </button>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      ) : currentResources.length === 0 ? (
+        <Card className="p-6 border-0 shadow-sm text-center text-muted-foreground">
+          Chưa có gợi ý nào. Hãy tiếp tục ghi lại cảm xúc để nhận được các đề xuất phù hợp hơn.
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {currentResources.map((resource) => (
+            <Card
+              key={resource.id}
+              className="p-5 border-0 shadow-sm cursor-pointer hover:shadow-md transition-all"
+              onClick={() => setSelectedResource(resource)}
+            >
+              <div className="flex items-start gap-4">
+                <span className="text-4xl flex-shrink-0">{resource.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground mb-1 line-clamp-2">{resource.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{resource.description}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {resource.duration && (
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                        ⏱️ {resource.duration}
+                      </span>
+                    )}
+                    {resource.category && (
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                        {resource.category}
+                      </span>
+                    )}
+                    {resource.difficulty && (
+                      <span
+                        className={`text-xs px-2 py-1 rounded font-medium ${getDifficultyColor(resource.difficulty)}`}
+                      >
+                        {resource.difficulty === "easy" ? "Dễ" : resource.difficulty === "medium" ? "Trung bình" : "Khó"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleBookmark(resource.id)
+                  }}
+                  className="flex-shrink-0 text-lg transition-transform hover:scale-110"
+                  title="Bookmark"
+                >
+                  {bookmarked.includes(resource.id) ? "⭐" : "☆"}
+                </button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Detail Modal */}
       {selectedResource && (
@@ -299,9 +354,8 @@ export default function ResourcesPage() {
               <div className="bg-accent/10 border border-accent/20 p-4 rounded-lg mb-6">
                 <h3 className="font-semibold text-foreground mb-2">Chi tiết</h3>
                 <p className="text-sm text-foreground leading-relaxed">
-                  {selectedResource.title.includes("4-7-8")
-                    ? "Đây là một kỹ thuật hít thở được biết đến rộng rãi. Hít vào qua mũi trong 4 giây, giữ hơi trong 7 giây, rồi thở ra qua miệng trong 8 giây. Lặp lại 3-4 lần. Kỹ thuật này giúp kích hoạt hệ thần kinh phó giao cảm và giảm bớt lo lắng."
-                    : "Đây là một tài nguyên hữu ích để hỗ trợ sức khỏe tâm lý của bạn. Hãy thử và xem nó có giúp ích cho bạn không. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với một chuyên gia."}
+                  {selectedResource.description} Hãy dành vài phút để trải nghiệm gợi ý này và ghi lại cảm nhận sau khi thực hiện.
+                  Nếu bạn cần thêm hướng dẫn hoặc hỗ trợ, hãy liên hệ với chuyên gia hoặc chia sẻ cùng cộng đồng MindScape.
                 </p>
               </div>
 
@@ -334,20 +388,18 @@ export default function ResourcesPage() {
       )}
 
       {/* Bookmarked Resources */}
-      {bookmarked.length > 0 && (
+      {bookmarkedItems.length > 0 && (
         <Card className="p-6 border-0 shadow-sm bg-primary/5 border border-primary/20">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Tài nguyên đã lưu ({bookmarked.length})</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Tài nguyên đã lưu ({bookmarkedItems.length})</h3>
           <div className="flex flex-wrap gap-2">
-            {currentResources
-              .filter((r) => bookmarked.includes(r.id))
-              .map((resource) => (
-                <span
-                  key={resource.id}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded-full text-sm"
-                >
-                  {resource.icon} {resource.title}
-                </span>
-              ))}
+            {bookmarkedItems.map((resource) => (
+              <span
+                key={resource.id}
+                className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded-full text-sm"
+              >
+                {resource.icon} {resource.title}
+              </span>
+            ))}
           </div>
         </Card>
       )}

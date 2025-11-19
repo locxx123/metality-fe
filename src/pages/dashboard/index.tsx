@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card"
 import { Link, useSearchParams } from "react-router-dom"
 import { ROUTE_URL } from "@/constants/routes"
 import { BotMessageSquare, ChartNoAxesColumn, Notebook, Smile } from "lucide-react"
-import { getDashboardStats, getRecentActivities } from "@/services/dashboardServices"
+import { getDashboardStats, getDashboardGreeting, getRecentActivities } from "@/services/dashboardServices"
 import { showError, showSuccess } from "@/utils/toast"
 import { getProfile } from "@/services/authServices"
 import useUserStore from "@/store/userStore"
@@ -50,6 +50,8 @@ export default function DashboardPage() {
   ])
   const [activities, setActivities] = useState<Array<{ time: string; action: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [greetingMessage, setGreetingMessage] = useState<string | null>(null)
+  const [isGreetingLoading, setIsGreetingLoading] = useState(true)
 
   // Handle OAuth callbacks (Google and Facebook)
   useEffect(() => {
@@ -116,6 +118,35 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [])
 
+  useEffect(() => {
+    let isMounted = true
+    const fetchGreeting = async () => {
+      setIsGreetingLoading(true)
+      try {
+        const response = await getDashboardGreeting()
+        if (isMounted && response.success && response.data?.greetingMessage) {
+          setGreetingMessage(response.data.greetingMessage)
+        } else if (isMounted) {
+          setGreetingMessage("Hãy chia sẻ cảm xúc hôm nay để chúng mình hiểu bạn hơn nhé.")
+        }
+      } catch (error) {
+        console.error("Failed to load greeting message:", error)
+        if (isMounted) {
+          setGreetingMessage("Hãy chia sẻ cảm xúc hôm nay để chúng mình hiểu bạn hơn nhé.")
+        }
+      } finally {
+        if (isMounted) {
+          setIsGreetingLoading(false)
+        }
+      }
+    }
+
+    fetchGreeting()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const quickActions = [
     {
       title: "Chia sẻ cảm xúc",
@@ -138,9 +169,13 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-2xl p-6 border border-primary/20 shadow-sm">
         <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Chào mừng trở lại!</h2>
-        <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
-          Hôm nay là một ngày tốt để chăm sóc sức khỏe tâm lý của bạn.
-        </p>
+        {isGreetingLoading ? (
+          <div className="h-5 w-48 bg-muted rounded animate-pulse" />
+        ) : (
+          <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
+            {greetingMessage}
+          </p>
+        )}
       </section>
 
       {/* Stats Grid */}
