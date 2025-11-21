@@ -12,5 +12,6 @@ export const ROUTE_URL = {
     JOURNAL: "/dashboard/journal",
     ANALYTICS: "/dashboard/analytics",
     RESOURCES: "/dashboard/resources",
+    RELAX: "/dashboard/relax",
 };
 

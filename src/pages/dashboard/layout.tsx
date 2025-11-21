@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ROUTE_URL } from "@/constants/routes"
 import logo from "@/resources/images/logo.png";
-import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User, Menu, X } from "lucide-react"
+import { BookCopy, BotMessageSquare, ChartNoAxesColumn, House, Notebook, Smile, LogOut, User, Menu, X, Sparkles } from "lucide-react"
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { logout, getProfile } from "@/services/authServices"
 import { showSuccess, showError } from "@/utils/toast"
@@ -15,6 +15,7 @@ const menuItems = [
     { href: ROUTE_URL.JOURNAL, label: "Nhật ký cảm xúc", icon: <Notebook /> },
     { href: ROUTE_URL.ANALYTICS, label: "Phân tích xu hướng", icon: <ChartNoAxesColumn /> },
     { href: ROUTE_URL.RESOURCES, label: "Tài nguyên hỗ trợ", icon: <BookCopy /> },
+    { href: ROUTE_URL.RELAX, label: "Thư giãn", icon: <Sparkles /> },
 ]
 
 const pageInfos = [
@@ -47,6 +48,11 @@ const pageInfos = [
         path: ROUTE_URL.RESOURCES,
         title: "Tài nguyên hỗ trợ",
         description: "Khám phá các bài viết, bài tập và tài nguyên giúp bạn cải thiện sức khỏe tinh thần",
+    },
+    {
+        path: ROUTE_URL.RELAX,
+        title: "Thư giãn",
+        description: "Xem video và nghe nhạc giúp bạn thư giãn và giải tỏa căng thẳng",
     },
 ]
 
