@@ -70,19 +70,12 @@ export default function ShareEmotionPage() {
     const currentEmotion = emotions.find((e) => e.value === selectedEmotion)
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Chia sẻ cảm xúc của bạn</h1>
-                <p className="text-muted-foreground">
-                    Ghi lại trạng thái tinh thần hiện tại và nhận được phản hồi tích cực từ trợ lý AI
-                </p>
-            </div>
+        <div className="max-w-2xl mx-auto space-y-6 lg:space-y-8 px-3 sm:px-0">
 
             {/* Emotion Selection */}
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Bạn đang cảm thấy như thế nào?</h2>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {emotions.map((emotion) => (
                         <button
                             key={emotion.value}
@@ -104,7 +97,7 @@ export default function ShareEmotionPage() {
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Mức độ cảm xúc</h2>
                 <div className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         {intensityLevels.map((level) => (
                             <button
                                 key={level.level}
@@ -174,7 +167,7 @@ export default function ShareEmotionPage() {
             {currentEmotion && (
                 <Card className="p-6 border-0 shadow-sm bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20">
                     <h2 className="text-lg font-semibold text-foreground mb-4">Tóm tắt cảm xúc của bạn</h2>
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 text-center sm:text-left">
                         <div className="text-6xl">{currentEmotion.emoji}</div>
                         <div>
                             <p className="text-sm text-muted-foreground">Cảm xúc:</p>
@@ -200,7 +193,7 @@ export default function ShareEmotionPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                     onClick={handleSubmit}
                     disabled={submitted}
@@ -231,4 +224,3 @@ export default function ShareEmotionPage() {
         </div>
     )
 }
-
