@@ -100,7 +100,8 @@ export default function ShareEmotionPage() {
                 </div>
             </Card>
 
-            {/* Intensity Slider */}
+            {/* Intensity Slider */} 
+            
             <Card className="p-6 border-0 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Mức độ cảm xúc</h2>
                 <div className="space-y-4">
