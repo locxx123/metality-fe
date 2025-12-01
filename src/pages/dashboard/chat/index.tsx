@@ -110,7 +110,7 @@ export default function ChatPage() {
     }
 
     loadSessions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [])
 
   // Load messages khi sessionId từ URL thay đổi
