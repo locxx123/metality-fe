@@ -117,7 +117,7 @@ export default function ChatPage() {
     if (sessionIdFromUrl) {
       loadMessages(sessionIdFromUrl)
     }
-  }, [sessionIdFromUrl])
+  }, [sessionIdFromUrl]) //sybau
 
   useEffect(() => {
     scrollToBottom()
