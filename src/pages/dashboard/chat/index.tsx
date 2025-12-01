@@ -113,7 +113,6 @@ export default function ChatPage() {
 
   }, [])
 
-  // Load messages khi sessionId từ URL thay đổi
   useEffect(() => {
     if (sessionIdFromUrl) {
       loadMessages(sessionIdFromUrl)
