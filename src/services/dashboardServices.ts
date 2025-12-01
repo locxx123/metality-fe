@@ -36,6 +36,20 @@ export const getDashboardStats = async (): Promise<GetDashboardStatsResponse> =>
     return response.data;
 };
 
+export interface DashboardGreetingResponse {
+    success: boolean;
+    statusCode: number;
+    data: {
+        greetingMessage: string;
+    };
+    msg: string;
+}
+
+export const getDashboardGreeting = async (): Promise<DashboardGreetingResponse> => {
+    const response = await axios.get("/dashboard/greeting");
+    return response.data;
+};
+
 export const getRecentActivities = async (limit?: number): Promise<GetRecentActivitiesResponse> => {
     const response = await axios.get("/dashboard/activities", {
         params: { limit },

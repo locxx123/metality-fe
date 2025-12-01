@@ -1,0 +1,31 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: ["metality-loc"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy frontend to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            echo "🔁 Pull frontend code"
+            cd /root/mentality-deploy/frontend
+            git pull origin metality-loc
+
+            echo "🐳 Build & deploy frontend container"
+            cd /root/mentality-deploy
+            docker-compose build frontend
+            docker-compose up -d frontend
+
+            echo "🎉 Frontend deployed successfully!"

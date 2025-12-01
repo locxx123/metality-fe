@@ -10,7 +10,11 @@ import ChatPage from "pages/dashboard/chat";
 import JournalPage from "pages/dashboard/journal";
 import AnalyticsPage from "pages/dashboard/analytics";
 import ResourcesPage from "pages/dashboard/resources";
+import RelaxPage from "pages/dashboard/relax";
 import { ROUTE_URL } from "@/constants/routes";
+import ForgotPasswordPage from "pages/auth/forgot-password";
+import VerifyResetOTPPage from "pages/auth/verify-reset-otp";
+import ResetPasswordPage from "pages/auth/reset-password";
 
 const routes = [
     {
@@ -32,6 +36,18 @@ const routes = [
             {
                 path: ROUTE_URL.VERIFY_OTP,
                 element: <VerifyOTPPage />,
+            },
+            {
+                path: ROUTE_URL.FORGOT_PASSWORD,
+                element: <ForgotPasswordPage />,
+            },
+            {
+                path: ROUTE_URL.VERIFY_RESET_OTP,
+                element: <VerifyResetOTPPage />,
+            },
+            {
+                path: ROUTE_URL.RESET_PASSWORD,
+                element: <ResetPasswordPage />,
             },
         ],
     },
@@ -66,6 +82,10 @@ const routes = [
             {
                 path: ROUTE_URL.RESOURCES,
                 element: <ResourcesPage />,
+            },
+            {
+                path: ROUTE_URL.RELAX,
+                element: <RelaxPage />,
             },
         ],
     },
