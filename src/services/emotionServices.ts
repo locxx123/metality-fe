@@ -54,3 +54,4 @@ export const getTrendsInsights = async (params?: GetTrendsQuery): Promise<TrendI
     const response = await axios.get("/analytics/trends/insights", { params });
     return response.data;
 };
+

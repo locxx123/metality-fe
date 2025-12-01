@@ -20,7 +20,7 @@ export default defineConfig({
   build: {
     manifest: true,
     sourcemap: false,
-    outDir: path.join(__dirname, "build"),
+    outDir: path.join(__dirname, "dist"),
     rollupOptions: {},
     commonjsOptions: {
       transformMixedEsModules: true,

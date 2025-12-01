@@ -8,6 +8,7 @@ import Logo from "@/components/share/logo"
 import { ROUTE_URL } from "@/constants/routes"
 import { sendOtp } from "@/services/authServices"
 import { showSuccess, showError } from "@/utils/toast"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function SignupPage() {
     const navigate = useNavigate()
@@ -16,6 +17,8 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("")
     const [name, setName] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -100,26 +103,46 @@ export default function SignupPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-2">Mật khẩu</label>
-                            <Input
-                                type="password"
-                                placeholder="Nhập mật khẩu"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full"
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Nhập mật khẩu"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full pr-10"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-2">Nhập lại mật khẩu</label>
-                            <Input
-                                type="password"
-                                placeholder="Nhập lại mật khẩu"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full"
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    placeholder="Nhập lại mật khẩu"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full pr-10"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                    className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                                    aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
 
                         <Button
