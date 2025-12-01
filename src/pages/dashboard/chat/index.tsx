@@ -37,7 +37,7 @@ export default function ChatPage() {
       setIsLoadingHistory(true)
       const response = await getConversation(sessionId)
       if (response.success) {
-        // Convert API messages to UI messages
+        // Convert API messages to UI message
         const convertedMessages: Message[] = response.data.messages.map((msg) => ({
           id: msg.id,
           type: msg.isFromUser ? "user" : "assistant",
