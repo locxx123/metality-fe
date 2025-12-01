@@ -79,9 +79,3 @@ Tạo file `.env` với các biến sau:
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
-## Notes
-
-- Dự án sử dụng shadcn UI và Tailwind CSS (không dùng Ant Design và SCSS như youmed-interface)
-- Cấu trúc code được tổ chức tương tự youmed-interface để dễ bảo trì
-- Tất cả components đã được convert từ Next.js sang ReactJS
-
