@@ -55,4 +55,3 @@ export const getTrendsInsights = async (params?: GetTrendsQuery): Promise<TrendI
     return response.data;
 };
 
-
