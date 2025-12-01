@@ -37,8 +37,7 @@ export default function ChatPage() {
       setIsLoadingHistory(true)
       const response = await getConversation(sessionId)
       if (response.success) {
-        // Convert API messages to UI messages
-        const convertedMessages: Message[] = response.data.messages.map((msg) => ({
+                const convertedMessages: Message[] = response.data.messages.map((msg) => ({
           id: msg.id,
           type: msg.isFromUser ? "user" : "assistant",
           content: msg.message,
@@ -111,15 +110,14 @@ export default function ChatPage() {
     }
 
     loadSessions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [])
 
-  // Load messages khi sessionId từ URL thay đổi
   useEffect(() => {
     if (sessionIdFromUrl) {
       loadMessages(sessionIdFromUrl)
     }
-  }, [sessionIdFromUrl])
+  }, [sessionIdFromUrl]) //sybau
 
   useEffect(() => {
     scrollToBottom()
